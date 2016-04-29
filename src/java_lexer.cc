@@ -114,7 +114,7 @@ JavaTokenType JavaLexer::getTokenType()
             tok = TokenRightSquare;
             break;
         case L'!':
-            tok = TokenNot;
+            tok = TokenLogicalNot;
             break;
         case L'<':
             saveCharacter();
@@ -138,6 +138,20 @@ JavaTokenType JavaLexer::getTokenType()
                 tok = TokenIncrement;
             else
                 return TokenAdd;
+            break;
+        case '&':
+            saveCharacter();
+            if (s->peek() == L'&')
+                tok = TokenLogicalAnd;
+            else
+                return TokenAnd;
+            break;
+        case '|':
+            saveCharacter();
+            if (s->peek() == L'|')
+                tok = TokenLogicalOr;
+            else
+                return TokenOr;
             break;
     }
     saveCharacter();

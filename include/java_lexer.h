@@ -43,9 +43,15 @@ enum JavaTokenType
     TokenLess,
     TokenLessOrEqual,
     TokenAdd,
+    TokenMul,
     TokenAddAssign,
     TokenIncrement,
-    TokenNot
+    TokenNot,
+    TokenOr,
+    TokenAnd,
+    TokenLogicalNot,
+    TokenLogicalOr,
+    TokenLogiaclAnd,
 
     /* End of file */
     TokenEof

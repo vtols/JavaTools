@@ -107,6 +107,9 @@ class JavaWhile // : JavaConditional
 
 class JavaExpression
 {
+    // return false; by default
+    // need to check if we use ++ and --
+    virtual bool isVariable();
 };
 
 class JavaAssignment // : JavaStatement
@@ -118,10 +121,41 @@ class JavaBinaryOp
     JavaExpression left, right;
 };
 
+class JavaUnaryOp
+{
+    JavaTokenType opToken;
+    JavaExpression expr;
+};
+
 class JavaCmp // : JavaBinaryOp
 {
     JavaTokenType cmpToken;
-    
+};
+
+class JavaAccessSequence
+{
+};
+
+class JavaIdAccess // : JavaAccessSequence
+{
+    std::wstring name;
+};
+
+class JavaSubscript // : JavaAccessSequence
+{
+    JavaAccessSequence base;
+    JavaExpression subscriptExpression;
+};
+
+class JavaMethodCall // : JavaIdAccess
+{
+    std::list<JavaExpression> argExpressions;
+};
+
+class JavaFieldAccess
+{
+    JavaAccessSequence base;
+    std::wstring name;
 };
 
 #endif /* JAVA_UNIT_H */

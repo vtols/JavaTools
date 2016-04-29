@@ -6,11 +6,11 @@ JavaParser::JavaParser(JavaLexer *lexer)
     l = lexer;
 }
 
-void JavaParser::parse()
+JavaFile JavaParser::parse()
 {
     token = l.next();
     lookup = l.next();
-    parseFile();
+    return parseFile();
 }
 
 void JavaParser::match(JavaTokenType type)
@@ -122,19 +122,23 @@ JavaArgs JavaParser::parseMethodArguments()
     /* ( */
     match(TokenLeftBracket);
 
-    while (tok.type != TokenRightBracket) {
-        JavaArg arg;
-        arg.type = parseType();
+    if (token.type != TokenRightBracket)
+        while (true) {
+            JavaArg arg;
+            arg.type = parseType();
 
-        /* Argument name */
-        arg.name = token.buffer;
-        match(TokenId);
+            /* Argument name */
+            arg.name = token.buffer;
+            match(TokenId);
 
-        args.args.push_back(arg);
+            args.args.push_back(arg);
 
-        /* , */
-        match(TokenComma);
-    }
+            /* , */
+            if (token.type == TokenComma)
+                match(TokenComma);
+            else
+                break;
+        }
     
     /* ) */
     match(TokenRightBracket);
@@ -285,25 +289,81 @@ JavaExpression JavaParser::parseSum()
 
 JavaExpression JavaParser::parseProduct()
 {
-    JavaExpression e = parseUnary();
+    JavaExpression e = parseBracketedOrUnary();
     while (token.type == TokenMul) {
         match(TokenMul);
-        e = JavaAnd(e, parseUnary());
+        e = JavaAnd(e, parseBracketedOrUnary());
     }
     return e;
 }
 
-JavaExpression JavaParser::parseUnary()
+JavaExpression JavaParser::parseBracketedOrUnary()
 {
     JavaExpression e;
     if (token.type == TokenLeftBracket) {
         match(TokenLeftBracket);
         e = parseExpression();
         match(TokenRightBracket);
-    }
-    else if (
-    e = parseAccessSequence();
+    } else
+        e = parseUnary();
+    return e;
 }
 
+JavaExpression JavaParser::parseUnary()
+{
+    JavaExpression e;
+    if (token.type == TokenLogicalNot) {
+        match(TokenLogicalNot);
+        /* It is possible that we need
+         * separate class for logical binaries
+         */
+        e = JavaUnaryOp(TokenLogicalNot, parseBracketedOrUnary());
+    } else if (token.type == TokenIncrement) {
+        match(TokenIncrement)
+        e = JavaUnaryOp(TokenIncrement, parseBracketedOrUnary());
+    } else if (token.type == TokenLeftBracket)
+        e = parseBracketedOrUnary();
+    else {
+        e = parseAccessSequence();
+        /* Differentiate it with prefix increment */
+        if (token.type == TokenIncrement) {
+            match(TokenIncrement);
+            e = JavaUnaryOp(TokenIncrement, e);
+        }
+    }
+    return e;
+}
 
+JavaAccessSequence JavaParser::parseAccessSequence()
+{
+    JavaAccessSequence s = JavaIdAccess(token.buffer);
+
+    if (token.type == TokenDot) {
+        match(TokenDot);
+        if (lookup.type == TokenLeftBracket) {
+            JavaMethodCall mc = JavaMethodCall(token.buffer);
+            match(TokenId);
+            match(TokenLeftBracket);
+
+            if (token.type != TokenRightBracket)
+                while (true) {
+                    JavaExpression arg = parseExpression();
+
+                    mc.argExpressions.push_back(arg);
+
+                    /* , */
+                    if (token.type == TokenComma)
+                        match(TokenComma);
+                    else
+                        break;
+                }
+
+            /* ) */
+            match(TokenRightBracket);
+
+            mc.base = s;
+            s = mc;
+        }
+    }
+}
 
