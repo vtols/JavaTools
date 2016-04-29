@@ -57,6 +57,10 @@ JavaTokenType JavaLexer::getTokenType()
             return TokenVoid;
         else if (buffer == L"int")
             return TokenInt;
+        else if (buffer == L"if")
+            return TokenInt;
+        else if (buffer == L"while")
+            return TokenInt;
         else
             return TokenId;
     }
@@ -82,6 +86,9 @@ JavaTokenType JavaLexer::getTokenType()
         case L'.':
             tok = TokenDot;
             break;
+        case L',':
+            tok = TokenComma;
+            break;
         case L'*':
             tok = TokenAsterisk;
             break;
@@ -105,6 +112,9 @@ JavaTokenType JavaLexer::getTokenType()
             break;
         case L']':
             tok = TokenRightSquare;
+            break;
+        case L'!':
+            tok = TokenNot;
             break;
         case L'<':
             saveCharacter();

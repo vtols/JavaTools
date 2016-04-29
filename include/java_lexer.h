@@ -16,6 +16,8 @@ enum JavaTokenType
     TokenPublic,
     TokenPrivate,
     TokenInt,
+    TokenIf,
+    TokenWhile,
 
     /* Identifier */
     TokenId,
@@ -26,6 +28,7 @@ enum JavaTokenType
 
     /* Special characters and operators*/
     TokenDot,
+    TokenComma,
     TokenAsterisk,
     TokenSemicolon,
     TokenLeftBracket,
@@ -42,6 +45,7 @@ enum JavaTokenType
     TokenAdd,
     TokenAddAssign,
     TokenIncrement,
+    TokenNot
 
     /* End of file */
     TokenEof
