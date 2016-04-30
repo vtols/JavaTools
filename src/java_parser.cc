@@ -336,12 +336,22 @@ JavaExpression JavaParser::parseUnary()
 
 JavaAccessSequence JavaParser::parseAccessSequence()
 {
-    JavaAccessSequence s = JavaIdAccess(token.buffer);
+    JavaAccessSequence s = nullptr;
 
-    if (token.type == TokenDot) {
-        match(TokenDot);
-        if (lookup.type == TokenLeftBracket) {
+    bool tail = true;
+
+    while (true) {
+        bool dot_matched = false;
+        if (tail && token.type == TokenDot) {
+            match(TokenDot);
+            dot_matched = true;
+        }
+
+        if (token.type == TokenId &&
+            lookup.type == TokenLeftBracket) {
             JavaMethodCall mc = JavaMethodCall(token.buffer);
+            mc.name = token.buffer;
+
             match(TokenId);
             match(TokenLeftBracket);
 
@@ -364,6 +374,33 @@ JavaAccessSequence JavaParser::parseAccessSequence()
             mc.base = s;
             s = mc;
         }
+        else if (token.type == TokenId) {
+            JavaIdAccess id = JavaIdAccess(token.buffer);
+            match(TokenId);
+
+            id.base = s;
+            s = id;
+        }
+        else if (tail && !dot_matched &&
+                 token.type == TokenLeftSquare) {
+            JavaExpression index;
+
+            /* [ */
+            match(TokenLeftSquare);
+
+            index = parseExpression();
+
+            /* ] */
+            match(TokenRightSquare);
+
+            JavaSubscript sub = JavaSubscript(index);
+            sub.base = s;
+        }
+
+        if (token.type != TokenDot &&
+            token.type != TokenLeftSquare)
+            break;
+        tail = true;
     }
 }
 

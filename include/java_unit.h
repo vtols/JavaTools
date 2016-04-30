@@ -134,6 +134,7 @@ class JavaCmp // : JavaBinaryOp
 
 class JavaAccessSequence
 {
+    JavaAccessSequence base;
 };
 
 class JavaIdAccess // : JavaAccessSequence
@@ -141,21 +142,14 @@ class JavaIdAccess // : JavaAccessSequence
     std::wstring name;
 };
 
-class JavaSubscript // : JavaAccessSequence
-{
-    JavaAccessSequence base;
-    JavaExpression subscriptExpression;
-};
-
 class JavaMethodCall // : JavaIdAccess
 {
     std::list<JavaExpression> argExpressions;
 };
 
-class JavaFieldAccess
+class JavaSubscript // : JavaAccessSequence
 {
-    JavaAccessSequence base;
-    std::wstring name;
+    JavaExpression subscriptExpression;
 };
 
 #endif /* JAVA_UNIT_H */
