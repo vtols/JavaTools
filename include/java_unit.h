@@ -211,4 +211,11 @@ struct JavaSubscript : JavaAccessSequence
     JavaSubscript(JavaExpression *index);
 };
 
+struct JavaLiteral : JavaAccessSequence
+{
+    JavaToken literalToken;
+
+    JavaLiteral(JavaToken token);
+};
+
 #endif /* JAVA_UNIT_H */

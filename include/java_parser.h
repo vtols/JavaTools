@@ -7,13 +7,12 @@
 class JavaParser
 {
 public:
+    JavaParser(JavaLexer *lexer);
     JavaFile *parse();
     
 private:
     JavaLexer *l;
     JavaToken token, lookup;
-
-    JavaParser(JavaLexer *lexer);
     void match(JavaTokenType type);
     void move();
     JavaFile *parseFile();

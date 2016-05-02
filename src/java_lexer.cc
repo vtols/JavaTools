@@ -66,7 +66,7 @@ JavaTokenType JavaLexer::getTokenType()
         else if (buffer == L"if")
             return TokenInt;
         else if (buffer == L"while")
-            return TokenInt;
+            return TokenWhile;
         else
             return TokenId;
     }

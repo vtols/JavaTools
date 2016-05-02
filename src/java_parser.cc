@@ -43,8 +43,10 @@ std::list<JavaImport*> JavaParser::parseImports()
         while (token.type != TokenSemicolon) {
             import->importString += token.buffer;
             match(TokenId);
-            if (token.type == TokenDot)
+            if (token.type == TokenDot) {
                 match(TokenDot);
+                import->importString += L'.';
+            }
             else
                 break;
         }
@@ -110,13 +112,14 @@ JavaMethodDeclaration *JavaParser::parseMethod()
                 break;
         }
         if (mods)
-            token = l->next();
+            move();
     }
 
     method->returnType = parseType();
     method->name = token.buffer;
     match(TokenId);
-    
+
+    method->arguments = parseMethodArguments();
     method->body = parseBlock();
 
     return method;
@@ -212,9 +215,15 @@ JavaStatement *JavaParser::parseStatement()
         return parseIf();
     if (token.type == TokenWhile)
         return parseWhile();
+
+    JavaStatement *st;
+
     if (lookup.type == TokenId)
-        return parseVarDeclaration();
-    return parseExpression();
+        st = parseVarDeclaration();
+    else
+        st = parseExpression();
+    match(TokenSemicolon);
+    return st;
 }
 
 JavaIf *JavaParser::parseIf()
@@ -361,7 +370,7 @@ JavaAccessSequence *JavaParser::parseAccessSequence()
 {
     JavaAccessSequence *s = nullptr;
 
-    bool tail = true;
+    bool tail = false;
     while (true) {
         bool dot_matched = false;
         if (tail && token.type == TokenDot) {
@@ -369,6 +378,12 @@ JavaAccessSequence *JavaParser::parseAccessSequence()
             dot_matched = true;
         }
 
+        if (!tail && (token.type == TokenString ||
+                token.type == TokenInteger)) {
+            JavaLiteral *literal = new JavaLiteral(token);
+            match(token.type);
+            return literal;
+        }
         if (token.type == TokenId &&
             lookup.type == TokenLeftBracket) {
             JavaMethodCall *mc = new JavaMethodCall(token.buffer);

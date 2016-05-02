@@ -4,21 +4,19 @@
 
 #include <file_stream.h>
 #include <java_lexer.h>
+#include <java_parser.h>
 
 int main()
 {
     std::locale::global(std::locale(""));
     
-    CharStream *f = new FileStream("Main.java");
-    JavaLexer l = JavaLexer(f);
+    CharStream *f = new FileStream("Sample.java");
+    JavaLexer *l = new JavaLexer(f);
+    JavaParser p = JavaParser(l);
 
-    while (true) {
-        JavaToken jtok = l.next();
-        if (jtok.type == TokenEof)
-            break;
-        std::wcout << jtok.buffer << L"\n";
-    }
+    JavaFile *j = p.parse();
 
+    delete l;
     delete f;
 
     return 0;

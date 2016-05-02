@@ -69,3 +69,8 @@ JavaSubscript::JavaSubscript(JavaExpression *index)
 {
     this->subscriptExpression = index;
 }
+
+JavaLiteral::JavaLiteral(JavaToken token)
+{
+    this->literalToken = token;
+}
