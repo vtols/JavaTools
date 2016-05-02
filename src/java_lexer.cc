@@ -2,6 +2,12 @@
 
 #include <java_lexer.h>
 
+JavaToken::JavaToken()
+{
+    this->type = TokenEof;
+    this->buffer = L"";
+}
+
 JavaToken::JavaToken(JavaTokenType type, std::wstring buffer)
 {
     this->type = type;

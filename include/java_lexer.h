@@ -51,7 +51,7 @@ enum JavaTokenType
     TokenAnd,
     TokenLogicalNot,
     TokenLogicalOr,
-    TokenLogiaclAnd,
+    TokenLogicalAnd,
 
     /* End of file */
     TokenEof
@@ -60,6 +60,7 @@ enum JavaTokenType
 class JavaToken
 {
 public:
+    JavaToken();
     JavaToken(JavaTokenType type, std::wstring buffer);
     JavaTokenType type;
     std::wstring buffer;

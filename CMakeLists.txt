@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(JavaTools)
 
 if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 endif()
 
 set(BUILD_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build)
@@ -24,11 +24,15 @@ set(SOURCES
     ${SOURCE_PATH}/main.cc
     ${SOURCE_PATH}/char_stream.cc
     ${SOURCE_PATH}/file_stream.cc
-    ${SOURCE_PATH}/java_lexer.cc)
+    ${SOURCE_PATH}/java_lexer.cc
+    ${SOURCE_PATH}/java_unit.cc
+    ${SOURCE_PATH}/java_parser.cc)
 
 set(HEADERS
     ${INCLUDE_PATH}/char_stream.h
     ${INCLUDE_PATH}/file_stream.h
-    ${INCLUDE_PATH}/java_lexer.h)
+    ${INCLUDE_PATH}/java_lexer.h
+    ${INCLUDE_PATH}/java_unit.h
+    ${INCLUDE_PATH}/java_parser.h)
 
 add_executable(${BINARY} ${SOURCES})

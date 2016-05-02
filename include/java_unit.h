@@ -2,6 +2,9 @@
 #define JAVA_UNIT_H
 
 #include <list>
+#include <string>
+
+#include <java_lexer.h>
 
 enum JavaTypeKind
 {
@@ -18,138 +21,194 @@ enum JavaAccess
     AccessProtected
 };
 
-class JavaFile
+struct JavaFile;
+struct JavaImport;
+struct JavaClassDeclaration;
+struct JavaMethodDeclaration;
+struct JavaType;
+struct JavaTypeBase;
+struct JavaArgs;
+struct JavaArg;
+struct JavaBlock;
+struct JavaStatement;
+struct JavaVarDeclaration;
+struct JavaAssignment;
+struct JavaConditional;
+struct JavaIf;
+struct JavaWhile;
+struct JavaExpression;
+struct JavaBinaryOp;
+struct JavaAnd;
+struct JavaOr;
+struct JavaAdd;
+struct JavaMul;
+struct JavaUnaryOp;
+struct JavaCmp;
+struct JavaAccessSequence;
+struct JavaIdAccess;
+struct JavaMethodCall;
+struct JavaSubscript;
+
+struct JavaFile
 {
-private:
-    std::list<JavaImport> imports;
-    JavaClassDeclaration jclass;
+    std::list<JavaImport*> imports;
+    JavaClassDeclaration *jclass;
 };
 
-class JavaImport
+struct JavaImport
 {
-private:
     std::wstring importString;
 };
 
-class JavaClassDeclaration
+struct JavaClassDeclaration
 {
-private:
     JavaAccess accessMode;
     std::wstring name;
-    std::list<JavaMethodDeclaration> methods;
+    std::list<JavaMethodDeclaration*> methods;
 };
 
-class JavaMethodDeclaration
+struct JavaMethodDeclaration
 {
-private:
     bool staticMethod;
     JavaAccess accessMode;
-
-    JavaType returnType;
-    JavaArgs arguments;
-
-    JavaBlock body;
+    std::wstring name;
+    JavaType *returnType;
+    JavaArgs *arguments;
+    JavaBlock *body;
 };
 
-class JavaType
+struct JavaType
 {
-private:
-    JavaTypeBase typeBase;
+    JavaTypeBase *typeBase;
 
     /* TypeName[][][]... count*/
     uint8_t subCount;
 };
 
-class JavaTypeBase
+struct JavaTypeBase
 {
     JavaTypeKind kind;
-    std::string name;
-};
-
-class JavaArgs
-{
-private:
-    std::list<JavaArg> args;
-};
-
-class JavaArg
-{
-    JavaType type;
     std::wstring name;
 };
 
-class JavaBlock
+struct JavaArgs
 {
-    std::list<JavaStatement> statements;
+    std::list<JavaArg*> args;
 };
 
-class JavaStatement
+struct JavaArg
 {
+    JavaType *type;
+    std::wstring name;
 };
 
-class JavaVarDeclaration // : JavaStatement
+struct JavaBlock
 {
+    std::list<JavaStatement*> statements;
 };
 
-class JavaConditional // : JavaStatement
-{
-    JavaExpression condition;
-    JavaBlock body;
-};
-
-class JavaIf // : JavaConditional
+struct JavaStatement
 {
 };
 
-class JavaWhile // : JavaConditional
+struct JavaVarDeclaration : JavaStatement
 {
 };
 
-class JavaExpression
+struct JavaConditional : JavaStatement
+{
+    JavaExpression *condition;
+    JavaBlock *body;
+};
+
+struct JavaIf : JavaConditional
+{
+};
+
+struct JavaWhile : JavaConditional
+{
+};
+
+struct JavaExpression : JavaStatement
 {
     // return false; by default
     // need to check if we use ++ and --
     virtual bool isVariable();
 };
 
-class JavaAssignment // : JavaStatement
+struct JavaAssignment : JavaExpression
 {
+    JavaExpression *to, *from;
+    JavaAssignment(JavaExpression *to, JavaExpression *from);
 };
 
-class JavaBinaryOp
+struct JavaBinaryOp : JavaExpression
 {
-    JavaExpression left, right;
+    JavaExpression *left, *right;
 };
 
-class JavaUnaryOp
+struct JavaAnd : JavaBinaryOp
+{
+    JavaAnd(JavaExpression *left, JavaExpression *right);
+};
+
+struct JavaOr : JavaBinaryOp
+{
+    JavaOr(JavaExpression *left, JavaExpression *right);
+};
+
+struct JavaAdd : JavaBinaryOp
+{
+    JavaAdd(JavaExpression *left, JavaExpression *right);
+};
+
+struct JavaMul : JavaBinaryOp
+{
+    JavaMul(JavaExpression *left, JavaExpression *right);
+};
+
+struct JavaUnaryOp : JavaExpression
 {
     JavaTokenType opToken;
-    JavaExpression expr;
+    JavaExpression *expr;
+
+    JavaUnaryOp(JavaTokenType type, JavaExpression *e);
 };
 
-class JavaCmp // : JavaBinaryOp
+struct JavaCmp : JavaBinaryOp
 {
     JavaTokenType cmpToken;
+
+    JavaCmp(JavaTokenType type, JavaExpression *left,
+        JavaExpression *right);
 };
 
-class JavaAccessSequence
+struct JavaAccessSequence : JavaExpression
 {
-    JavaAccessSequence base;
+    JavaAccessSequence *base;
+
+    JavaAccessSequence();
 };
 
-class JavaIdAccess // : JavaAccessSequence
+struct JavaIdAccess : JavaAccessSequence
 {
     std::wstring name;
+
+    JavaIdAccess(std::wstring name);
 };
 
-class JavaMethodCall // : JavaIdAccess
+struct JavaMethodCall : JavaIdAccess
 {
-    std::list<JavaExpression> argExpressions;
+    std::list<JavaExpression*> argExpressions;
+
+    JavaMethodCall(std::wstring name);
 };
 
-class JavaSubscript // : JavaAccessSequence
+struct JavaSubscript : JavaAccessSequence
 {
-    JavaExpression subscriptExpression;
+    JavaExpression *subscriptExpression;
+
+    JavaSubscript(JavaExpression *index);
 };
 
 #endif /* JAVA_UNIT_H */
