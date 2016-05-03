@@ -31,8 +31,25 @@ set(SOURCES
 set(HEADERS
     ${INCLUDE_PATH}/char_stream.h
     ${INCLUDE_PATH}/file_stream.h
+    ${INCLUDE_PATH}/byte_stream.h
+    ${INCLUDE_PATH}/file_byte_stream.h
     ${INCLUDE_PATH}/java_lexer.h
     ${INCLUDE_PATH}/java_unit.h
     ${INCLUDE_PATH}/java_parser.h)
 
 add_executable(${BINARY} ${SOURCES})
+
+set(DUMP_BINARY dump)
+
+set(DUMP_SOURCES
+    ${SOURCE_PATH}/dump.cc
+    ${SOURCE_PATH}/byte_stream.cc
+    ${SOURCE_PATH}/file_byte_stream.cc
+    ${SOURCE_PATH}/java_class.cc)
+
+set(DUMP_HEADERS
+    ${INCLUDE_PATH}/byte_stream.cc
+    ${INCLUDE_PATH}/file_byte_stream.cc
+    ${INCLUDE_PATH}/java_class.cc)
+
+add_executable(${DUMP_BINARY} ${DUMP_SOURCES})
