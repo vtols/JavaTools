@@ -31,4 +31,3 @@ uint32_t ByteStream::read32()
            (uint32_t) buffer[2] << 8  |
            (uint32_t) buffer[3];
 }
-

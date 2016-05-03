@@ -44,12 +44,16 @@ set(DUMP_BINARY dump)
 set(DUMP_SOURCES
     ${SOURCE_PATH}/dump.cc
     ${SOURCE_PATH}/byte_stream.cc
+    ${SOURCE_PATH}/byte_stream_writer.cc
     ${SOURCE_PATH}/file_byte_stream.cc
+    ${SOURCE_PATH}/file_byte_stream_writer.cc
     ${SOURCE_PATH}/java_class.cc)
 
 set(DUMP_HEADERS
     ${INCLUDE_PATH}/byte_stream.cc
+    ${INCLUDE_PATH}/byte_stream_writer.cc
     ${INCLUDE_PATH}/file_byte_stream.cc
+    ${INCLUDE_PATH}/file_byte_stream_writer.cc
     ${INCLUDE_PATH}/java_class.cc)
 
 add_executable(${DUMP_BINARY} ${DUMP_SOURCES})

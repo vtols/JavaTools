@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <file_byte_stream.h>
+#include <file_byte_stream_writer.h>
 #include <java_class.h>
 
 int main()
@@ -10,12 +11,12 @@ int main()
     FileByteStream *f = new FileByteStream("Sample.class");
     ClassFile c = ClassFile::read(f);
     std::cout << std::hex << "0x" << std::uppercase << c.magic
-              << std::dec << std::endl;
+            << std::dec << std::endl;
     std::cout << c.majorVersion << ' '
-              << c.minorVersion << ' '
-              << c.constantPoolCount - 1 << std::endl;
+            << c.minorVersion << ' '
+            << c.constantPoolCount - 1 << std::endl;
     std::cout << "Constant pool size "
-              << c.constantPoolCount << std::endl;
+            << c.constantPoolCount << std::endl;
 
     for (int i = 1; i < c.constantPoolCount; i++) {
         std::cout << "#" << i << std::endl << '\t';
@@ -32,7 +33,7 @@ int main()
             case CONSTANT_NameAndType:
                 ref = (RefInfo *) inf;
                 std::cout << '#' << ref->classIndex << ':'
-                          << '#' << ref->nameAndTypeIndex << std::endl;
+                        << '#' << ref->nameAndTypeIndex << std::endl;
                 break;
             case CONSTANT_String:
             case CONSTANT_Class:
@@ -47,5 +48,21 @@ int main()
                 break;
         }
     }
+
+    for (int i = 1; i < c.constantPoolCount; i++)
+        if (c.constantPool[i - 1]->tag == CONSTANT_Utf8) {
+            Utf8Info *utf8 = (Utf8Info *) c.constantPool[i - 1];
+            if (utf8->str == "Writing from class Sample") {
+                utf8->str = "Hello world";
+                break;
+            }
+        }
+
+    delete f;
+
+    FileByteStreamWriter *w = new FileByteStreamWriter("Sample.class");
+    c.write(w);
+    delete w;
+
     return 0;
 }

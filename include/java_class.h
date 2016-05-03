@@ -5,7 +5,7 @@
 #include <string>
 
 #include <byte_stream.h>
-//#include <byte_stream_writer.h>
+#include <byte_stream_writer.h>
 
 struct ConstantPoolInfo;
 struct ClassFile;
@@ -68,8 +68,7 @@ struct ClassFile
     std::vector<AttributeInfo*> attributes;
 
     static ClassFile read(ByteStream *bs);
-    void write(ByteStream *bs);
-//    static ClassFile void(ByteStreamWriter *bs);
+    void write(ByteStreamWriter *bs);
     std::string getUtf8(uint16_t index);
 };
 
@@ -78,6 +77,7 @@ struct ConstantPoolInfo
     uint8_t tag;
 
     static ConstantPoolInfo *read(ByteStream *bs);
+    virtual void write(ByteStreamWriter *bs);
 };
 
 struct RefInfo : ConstantPoolInfo
@@ -85,6 +85,7 @@ struct RefInfo : ConstantPoolInfo
     uint16_t classIndex, nameAndTypeIndex;
 
     static RefInfo *read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
 };
 
 struct IndexInfo : ConstantPoolInfo
@@ -92,6 +93,7 @@ struct IndexInfo : ConstantPoolInfo
     uint16_t index;
 
     static IndexInfo *read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
 };
 
 struct Utf8Info : ConstantPoolInfo
@@ -99,6 +101,7 @@ struct Utf8Info : ConstantPoolInfo
     std::string str;
 
     static Utf8Info *read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
 };
 
 struct MemberInfo
@@ -111,6 +114,7 @@ struct MemberInfo
     std::vector<AttributeInfo*> attributes;
 
     static MemberInfo *read(ByteStream *bs, ClassFile *cf);
+    void write(ByteStreamWriter *bs);
 };
 
 struct AttributeInfo
@@ -119,6 +123,7 @@ struct AttributeInfo
     uint32_t length;
 
     static AttributeInfo *read(ByteStream *bs, ClassFile *cf);
+    virtual void write(ByteStreamWriter *bs);
 };
 
 struct Exception
@@ -129,6 +134,7 @@ struct Exception
     uint16_t catchType;
     
     static Exception read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
 };
 
 struct CodeAttribute : AttributeInfo
@@ -146,6 +152,7 @@ struct CodeAttribute : AttributeInfo
     std::vector<AttributeInfo*> attributes;
 
     static CodeAttribute *read(ByteStream *bs, ClassFile *cf);
+    void write(ByteStreamWriter *bs);
 };
 
 struct LineNumber
@@ -154,6 +161,7 @@ struct LineNumber
     uint16_t lineNumber;
 
     static LineNumber read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
 };
 
 struct LineNumberTableAttribute : AttributeInfo
@@ -162,6 +170,7 @@ struct LineNumberTableAttribute : AttributeInfo
     std::vector<LineNumber> lineNumberTable;
 
     static LineNumberTableAttribute *read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
 };
 
 struct StackMapFrame
@@ -169,6 +178,7 @@ struct StackMapFrame
     uint8_t frameType;
 
     static StackMapFrame *read(ByteStream *bs);
+    virtual void write(ByteStreamWriter *bs);
 };
 
 struct StackMapTableAttribute : AttributeInfo
@@ -177,11 +187,13 @@ struct StackMapTableAttribute : AttributeInfo
     std::vector<StackMapFrame*> entries;
 
     static StackMapTableAttribute *read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
 };
 
 struct SameFrame : StackMapFrame
 {
     static SameFrame *read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
 };
 
 struct SourceFileAttribute : AttributeInfo
@@ -189,6 +201,7 @@ struct SourceFileAttribute : AttributeInfo
     uint16_t sourceFileIndex;
     
     static SourceFileAttribute *read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
 };
 
 #endif /* JAVA_CLASS_H */

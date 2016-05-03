@@ -1,11 +1,13 @@
 #include <java_class.h>
 
+#include "byte_stream_writer.h"
+
 ClassFile ClassFile::read(ByteStream *bs)
 {
     ClassFile cf;
 
     cf.magic = bs->read32();
-    
+
     cf.minorVersion = bs->read16();
     cf.majorVersion = bs->read16();
 
@@ -27,16 +29,48 @@ ClassFile ClassFile::read(ByteStream *bs)
     cf.fieldsCount = bs->read16();
     for (int i = 0; i < cf.fieldsCount; i++)
         cf.fields.push_back(MemberInfo::read(bs, &cf));
-    
+
     cf.methodsCount = bs->read16();
     for (int i = 0; i < cf.methodsCount; i++)
         cf.methods.push_back(MemberInfo::read(bs, &cf));
-    
+
     cf.attributesCount = bs->read16();
     for (int i = 0; i < cf.attributesCount; i++)
         cf.attributes.push_back(AttributeInfo::read(bs, &cf));
 
     return cf;
+}
+
+void ClassFile::write(ByteStreamWriter* bs)
+{
+    bs->write(magic);
+
+    bs->write(minorVersion);
+    bs->write(majorVersion);
+
+    bs->write(constantPoolCount);
+    for (int i = 1; i < constantPoolCount; i++)
+        constantPool[i - 1]->write(bs);
+
+    bs->write(accessFlags);
+    bs->write(thisClass);
+    bs->write(superClass);
+
+    bs->write(interfacesCount);
+    for (int i = 0; i < interfacesCount; i++)
+        bs->write(interfaces[i]);
+
+    bs->write(fieldsCount);
+    for (int i = 0; i < fieldsCount; i++)
+        fields[i]->write(bs);
+
+    bs->write(methodsCount);
+    for (int i = 0; i < methodsCount; i++)
+        methods[i]->write(bs);
+
+    bs->write(attributesCount);
+    for (int i = 0; i < attributesCount; i++)
+        attributes[i]->write(bs);
 }
 
 std::string ClassFile::getUtf8(uint16_t index)
@@ -76,13 +110,25 @@ ConstantPoolInfo *ConstantPoolInfo::read(ByteStream *bs)
     return ci;
 }
 
+void ConstantPoolInfo::write(ByteStreamWriter *bs)
+{
+    bs->write(tag);
+}
+
 RefInfo *RefInfo::read(ByteStream *bs)
 {
     RefInfo *mi = new RefInfo;
-    
+
     mi->classIndex = bs->read16();
     mi->nameAndTypeIndex = bs->read16();
     return mi;
+}
+
+void RefInfo::write(ByteStreamWriter *bs)
+{
+    ConstantPoolInfo::write(bs);
+    bs->write(classIndex);
+    bs->write(nameAndTypeIndex);
 }
 
 IndexInfo *IndexInfo::read(ByteStream *bs)
@@ -91,6 +137,12 @@ IndexInfo *IndexInfo::read(ByteStream *bs)
 
     ri->index = bs->read16();
     return ri;
+}
+
+void IndexInfo::write(ByteStreamWriter *bs)
+{
+    ConstantPoolInfo::write(bs);
+    bs->write(index);
 }
 
 Utf8Info *Utf8Info::read(ByteStream *bs)
@@ -105,6 +157,13 @@ Utf8Info *Utf8Info::read(ByteStream *bs)
     return utf8;
 }
 
+void Utf8Info::write(ByteStreamWriter *bs)
+{
+    ConstantPoolInfo::write(bs);
+    bs->write((uint16_t) str.length());
+    bs->write((uint8_t *) str.c_str(), str.length());
+}
+
 MemberInfo *MemberInfo::read(ByteStream *bs, ClassFile *cf)
 {
     MemberInfo *mi = new MemberInfo;
@@ -112,11 +171,22 @@ MemberInfo *MemberInfo::read(ByteStream *bs, ClassFile *cf)
     mi->accessFlags = bs->read16();
     mi->nameIndex = bs->read16();
     mi->descriptorIndex = bs->read16();
-    
+
     mi->attributesCount = bs->read16();
     for (int i = 0; i < mi->attributesCount; i++)
         mi->attributes.push_back(AttributeInfo::read(bs, cf));
     return mi;
+}
+
+void MemberInfo::write(ByteStreamWriter *bs)
+{
+    bs->write(accessFlags);
+    bs->write(nameIndex);
+    bs->write(descriptorIndex);
+
+    bs->write(attributesCount);
+    for (int i = 0; i < attributesCount; i++)
+        attributes[i]->write(bs);
 }
 
 AttributeInfo *AttributeInfo::read(ByteStream *bs, ClassFile *cf)
@@ -142,6 +212,12 @@ AttributeInfo *AttributeInfo::read(ByteStream *bs, ClassFile *cf)
     return attr;
 }
 
+void AttributeInfo::write(ByteStreamWriter *bs)
+{
+    bs->write(nameIndex);
+    bs->write(length);
+}
+
 CodeAttribute *CodeAttribute::read(ByteStream *bs, ClassFile *cf)
 {
     CodeAttribute *attr = new CodeAttribute;
@@ -159,10 +235,29 @@ CodeAttribute *CodeAttribute::read(ByteStream *bs, ClassFile *cf)
         attr->exceptionTable.push_back(Exception::read(bs));
 
     attr->attributesCount = bs->read16();
-    for (int i = 0; i < attr->attributesCount; i++) 
+    for (int i = 0; i < attr->attributesCount; i++)
         attr->attributes.push_back(AttributeInfo::read(bs, cf));
 
     return attr;
+}
+
+void CodeAttribute::write(ByteStreamWriter *bs)
+{
+    AttributeInfo::write(bs);
+
+    bs->write(maxStack);
+    bs->write(maxLocals);
+
+    bs->write(codeLength);
+    bs->write(code, codeLength);
+
+    bs->write(exceptionTableLength);
+    for (int i = 0; i < exceptionTableLength; i++)
+        exceptionTable[i].write(bs);
+
+    bs->write(attributesCount);
+    for (int i = 0; i < attributesCount; i++)
+        attributes[i]->write(bs);
 }
 
 Exception Exception::read(ByteStream *bs)
@@ -176,6 +271,14 @@ Exception Exception::read(ByteStream *bs)
     return ex;
 }
 
+void Exception::write(ByteStreamWriter *bs)
+{
+    bs->write(startPc);
+    bs->write(endPc);
+    bs->write(handlerPc);
+    bs->write(catchType);
+}
+
 LineNumberTableAttribute *LineNumberTableAttribute::read(ByteStream *bs)
 {
     LineNumberTableAttribute *attr = new LineNumberTableAttribute;
@@ -187,6 +290,15 @@ LineNumberTableAttribute *LineNumberTableAttribute::read(ByteStream *bs)
     return attr;
 }
 
+void LineNumberTableAttribute::write(ByteStreamWriter *bs)
+{
+    AttributeInfo::write(bs);
+
+    bs->write(lineNumberTableLength);
+    for (int i = 0; i < lineNumberTableLength; i++)
+        lineNumberTable[i].write(bs);
+}
+
 LineNumber LineNumber::read(ByteStream *bs)
 {
     LineNumber ln;
@@ -194,6 +306,12 @@ LineNumber LineNumber::read(ByteStream *bs)
     ln.startPc = bs->read16();
     ln.lineNumber = bs->read16();
     return ln;
+}
+
+void LineNumber::write(ByteStreamWriter *bs)
+{
+    bs->write(startPc);
+    bs->write(lineNumber);
 }
 
 StackMapTableAttribute *StackMapTableAttribute::read(ByteStream *bs)
@@ -205,6 +323,15 @@ StackMapTableAttribute *StackMapTableAttribute::read(ByteStream *bs)
         attr->entries.push_back(StackMapFrame::read(bs));
     return attr;
 };
+
+void StackMapTableAttribute::write(ByteStreamWriter *bs)
+{
+    AttributeInfo::write(bs);
+
+    bs->write(numberOfEntries);
+    for (int i = 0; i < numberOfEntries; i++)
+        entries[i]->write(bs);
+}
 
 StackMapFrame *StackMapFrame::read(ByteStream *bs)
 {
@@ -220,9 +347,19 @@ StackMapFrame *StackMapFrame::read(ByteStream *bs)
     return frame;
 }
 
+void StackMapFrame::write(ByteStreamWriter *bs)
+{
+    bs->write(frameType);
+}
+
 SameFrame *SameFrame::read(ByteStream *bs)
 {
     return new SameFrame;
+}
+
+void SameFrame::write(ByteStreamWriter *bs)
+{
+    StackMapFrame::write(bs);
 }
 
 SourceFileAttribute *SourceFileAttribute::read(ByteStream *bs)
@@ -231,4 +368,11 @@ SourceFileAttribute *SourceFileAttribute::read(ByteStream *bs)
 
     src->sourceFileIndex = bs->read16();
     return src;
+}
+
+void SourceFileAttribute::write(ByteStreamWriter *bs)
+{
+    AttributeInfo::write(bs);
+
+    bs->write(sourceFileIndex);
 }
