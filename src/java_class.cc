@@ -1,4 +1,5 @@
 #include <java_class.h>
+#include <iostream>
 
 #include "byte_stream_writer.h"
 
@@ -14,6 +15,7 @@ ClassFile ClassFile::read(ByteStream *bs)
     cf.constantPoolCount = bs->read16();
     ConstantPoolInfo *ci;
     for (int i = 1; i < cf.constantPoolCount; i++) {
+        std::cout << "Reading const #" << i << std::endl;
         ci = ConstantPoolInfo::read(bs);
         cf.constantPool.push_back(ci);
     }
@@ -119,16 +121,16 @@ RefInfo *RefInfo::read(ByteStream *bs)
 {
     RefInfo *mi = new RefInfo;
 
-    mi->classIndex = bs->read16();
-    mi->nameAndTypeIndex = bs->read16();
+    mi->firstIndex = bs->read16();
+    mi->secondIndex = bs->read16();
     return mi;
 }
 
 void RefInfo::write(ByteStreamWriter *bs)
 {
     ConstantPoolInfo::write(bs);
-    bs->write(classIndex);
-    bs->write(nameAndTypeIndex);
+    bs->write(firstIndex);
+    bs->write(secondIndex);
 }
 
 IndexInfo *IndexInfo::read(ByteStream *bs)

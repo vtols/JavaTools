@@ -4,6 +4,8 @@
 #include <file_byte_stream_writer.h>
 #include <java_class.h>
 
+#include "java_class_builder.h"
+
 int main()
 {
     std::locale::global(std::locale(""));
@@ -32,8 +34,8 @@ int main()
             case CONSTANT_InterfaceMethodref:
             case CONSTANT_NameAndType:
                 ref = (RefInfo *) inf;
-                std::cout << '#' << ref->classIndex << ':'
-                        << '#' << ref->nameAndTypeIndex << std::endl;
+                std::cout << '#' << ref->firstIndex << ':'
+                        << '#' << ref->secondIndex << std::endl;
                 break;
             case CONSTANT_String:
             case CONSTANT_Class:
@@ -60,9 +62,28 @@ int main()
 
     delete f;
 
-    FileByteStreamWriter *w = new FileByteStreamWriter("Sample.class");
+    FileByteStreamWriter *w;
+
+    w = new FileByteStreamWriter("Sample.class");
     c.write(w);
     delete w;
+
+    w = new FileByteStreamWriter("Gen.class");
+    ClassBuilder cb("Gen");
+
+    MethodBuilder *mb = cb.createMethod("main");
+    mb->setDescriptor("([Ljava/lang/String;)V");
+    mb->setAccessFlags(ACC_PUBLIC | ACC_STATIC);
+    mb->setMax(2, 1);
+
+    mb->field(opcodes::GETSTATIC,
+            "java/lang/System", "out", "Ljava/io/PrintStream;");
+    mb->loadString("Hello World!");
+    mb->invoke(opcodes::INVOKEVIRTUAL,
+            "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+    mb->instruction(opcodes::RETURN);
+
+    cb.build(w);
 
     return 0;
 }
