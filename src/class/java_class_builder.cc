@@ -1,5 +1,4 @@
-#include <java_class_builder.h>
-//#include <java_opcodes.h>
+#include <class/java_class_builder.h>
 
 ClassBuilder::ClassBuilder(std::string name)
 {

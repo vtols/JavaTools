@@ -1,6 +1,6 @@
 #include <cwctype>
 
-#include <java_lexer.h>
+#include <parser/java_lexer.h>
 
 JavaToken::JavaToken()
 {

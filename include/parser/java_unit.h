@@ -4,7 +4,7 @@
 #include <list>
 #include <string>
 
-#include <java_lexer.h>
+#include <parser/java_lexer.h>
 
 enum JavaTypeKind
 {

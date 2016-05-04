@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 
-#include <byte_stream.h>
-#include <byte_stream_writer.h>
+#include <io/byte_stream.h>
+#include <io/byte_stream_writer.h>
 
 struct ConstantPoolInfo;
 struct ClassFile;

@@ -1,7 +1,7 @@
-#include <java_class.h>
 #include <iostream>
 
-#include "byte_stream_writer.h"
+#include <io/byte_stream_writer.h>
+#include <class/java_class.h>
 
 ClassFile ClassFile::read(ByteStream *bs)
 {

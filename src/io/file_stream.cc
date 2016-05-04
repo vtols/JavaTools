@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <file_stream.h>
+#include <io/file_stream.h>
 
 FileStream::FileStream(std::string path)
 {

@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <file_byte_stream_writer.h>
+#include <io/file_byte_stream_writer.h>
 
 FileByteStreamWriter::FileByteStreamWriter(std::string path)
 {

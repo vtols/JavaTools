@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 
-#include <byte_stream_writer.h>
+#include <io/byte_stream_writer.h>
 
 class FileByteStreamWriter : public ByteStreamWriter
 {

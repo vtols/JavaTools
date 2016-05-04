@@ -4,10 +4,10 @@
 #include <string>
 #include <map>
 
-#include <byte_stream_writer.h>
-#include <byte_buffer.h>
-#include <java_class.h>
-#include <java_opcodes.h>
+#include <io/byte_stream_writer.h>
+#include <io/byte_buffer.h>
+#include <class/java_class.h>
+#include <class/java_opcodes.h>
 
 class ClassBuilder;
 class MethodBuilder;

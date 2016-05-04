@@ -1,4 +1,4 @@
-#include <byte_stream_writer.h>
+#include <io/byte_stream_writer.h>
 
 ByteStreamWriter::~ByteStreamWriter()
 {

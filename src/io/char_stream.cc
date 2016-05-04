@@ -1,4 +1,4 @@
-#include <char_stream.h>
+#include <io/char_stream.h>
 
 CharStream::~CharStream()
 {

@@ -2,9 +2,9 @@
 #include <clocale>
 #include <cwchar>
 
-#include <file_stream.h>
-#include <java_lexer.h>
-#include <java_parser.h>
+#include <io/file_stream.h>
+#include <parser/java_lexer.h>
+#include <parser/java_parser.h>
 
 int main()
 {

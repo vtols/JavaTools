@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 
-#include <char_stream.h>
+#include <io/char_stream.h>
 
 class FileStream : public CharStream
 {

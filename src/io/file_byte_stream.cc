@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <file_byte_stream.h>
+#include <io/file_byte_stream.h>
 
 FileByteStream::FileByteStream(std::string path)
 {

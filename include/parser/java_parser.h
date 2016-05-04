@@ -1,8 +1,8 @@
 #ifndef JAVA_PARSER_H
 #define JAVA_PARSER_H
 
-#include <java_lexer.h>
-#include <java_unit.h>
+#include <parser/java_lexer.h>
+#include <parser/java_unit.h>
 
 class JavaParser
 {

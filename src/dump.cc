@@ -1,10 +1,10 @@
 #include <iostream>
 
-#include <file_byte_stream.h>
-#include <file_byte_stream_writer.h>
-#include <java_class.h>
+#include <io/file_byte_stream.h>
+#include <io/file_byte_stream_writer.h>
 
-#include "java_class_builder.h"
+#include <class/java_class.h>
+#include <class/java_class_builder.h>
 
 int main()
 {

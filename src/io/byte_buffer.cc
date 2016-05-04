@@ -1,7 +1,7 @@
 #include <vector>
 #include <algorithm>
 
-#include <byte_buffer.h>
+#include <io/byte_buffer.h>
 
 ByteBuffer::ByteBuffer(std::vector<uint8_t> *bytes)
 {

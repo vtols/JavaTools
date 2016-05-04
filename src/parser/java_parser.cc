@@ -1,5 +1,5 @@
-#include <java_lexer.h>
-#include <java_parser.h>
+#include <parser/java_lexer.h>
+#include <parser/java_parser.h>
 
 JavaParser::JavaParser(JavaLexer *lexer)
 {

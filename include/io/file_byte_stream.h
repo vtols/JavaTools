@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 
-#include <byte_stream.h>
+#include <io/byte_stream.h>
 
 class FileByteStream : public ByteStream
 {

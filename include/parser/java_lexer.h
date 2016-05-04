@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include <char_stream.h>
-#include <java_lexer.h>
+#include <io/char_stream.h>
+#include <parser/java_lexer.h>
 
 enum JavaTokenType
 {

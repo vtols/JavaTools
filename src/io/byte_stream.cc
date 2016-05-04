@@ -1,4 +1,4 @@
-#include <byte_stream.h>
+#include <io/byte_stream.h>
 
 ByteStream::~ByteStream()
 {
