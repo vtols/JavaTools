@@ -8,34 +8,33 @@ class JavaParser
 {
 public:
     JavaParser(JavaLexer *lexer);
-    JavaFile *parse();
+    SourceFile *parse();
     
 private:
     JavaLexer *l;
     JavaToken token, lookup;
     void match(JavaTokenType type);
     void move();
-    JavaFile *parseFile();
-    std::list<JavaImport*> parseImports();
-    JavaClassDeclaration *parseClass();
-    JavaMethodDeclaration *parseMethod();
-    JavaArgs *parseMethodArguments();
-    JavaType *parseType();
-    JavaBlock *parseBlock();
-    JavaStatement *parseStatement();
-    JavaIf *parseIf();
-    JavaWhile *parseWhile();
-    JavaVarDeclaration *parseVarDeclaration();
-    JavaExpression *parseExpression();
-    JavaExpression *parseAssignment();
-    JavaExpression *parseOr();
-    JavaExpression *parseAnd();
-    JavaExpression *parseComparison();
-    JavaExpression *parseSum();
-    JavaExpression *parseProduct();
-    JavaExpression *parseBracketedOrUnary();
-    JavaExpression *parseUnary();
-    JavaAccessSequence *parseAccessSequence();
+    SourceFile *parseFile();
+    void parseImports(std::list<std::string>& imports);
+    Node parseClass();
+    Node parseMethod();
+    Node parseMethodArguments();
+    Node parseType();
+    Node parseBlock();
+    Node parseStatement();
+    Node parseConditional();
+    Node parseVarDeclaration();
+    Node parseExpression();
+    Node parseAssignment();
+    Node parseOr();
+    Node parseAnd();
+    Node parseComparison();
+    Node parseSum();
+    Node parseProduct();
+    Node parseBracketedOrUnary();
+    Node parseUnary();
+    Node parseAccessSequence();
 };
 
 #endif /* JAVA_PARSER_H */

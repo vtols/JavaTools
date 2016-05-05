@@ -14,7 +14,7 @@ int main()
     JavaLexer *l = new JavaLexer(f);
     JavaParser p = JavaParser(l);
 
-    JavaFile *j = p.parse();
+    SourceFile *src = p.parse();
 
     delete l;
     delete f;

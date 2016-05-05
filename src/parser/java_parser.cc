@@ -6,7 +6,7 @@ JavaParser::JavaParser(JavaLexer *lexer)
     l = lexer;
 }
 
-JavaFile *JavaParser::parse()
+SourceFile *JavaParser::parse()
 {
     token = l->next();
     lookup = l->next();
@@ -24,28 +24,27 @@ void JavaParser::move()
     lookup = l->next();
 }
 
-JavaFile *JavaParser::parseFile()
+SourceFile *JavaParser::parseFile()
 {
-    JavaFile *f = new JavaFile;
-    f->imports = parseImports();
+    SourceFile *f = new SourceFile;
+    parseImports(f->imports);
     f->jclass = parseClass();
     return f;
 }
 
-std::list<JavaImport*> JavaParser::parseImports()
+void JavaParser::parseImports(
+        std::list<std::string>& imports)
 {
-    std::list<JavaImport*> imports;
     while (token.type == TokenImport) {
-        JavaImport *import = new JavaImport;
-        import->importString = "";
+        std::string import;
 
         match(TokenImport);
         while (token.type != TokenSemicolon) {
-            import->importString += token.buffer;
+            import += token.buffer;
             match(TokenId);
             if (token.type == TokenDot) {
                 match(TokenDot);
-                import->importString += '.';
+                import += '.';
             }
             else
                 break;
@@ -54,12 +53,11 @@ std::list<JavaImport*> JavaParser::parseImports()
 
         imports.push_back(import);
     }
-    return imports;
 }
 
-JavaClassDeclaration *JavaParser::parseClass()
+Node JavaParser::parseClass()
 {
-    JavaClassDeclaration *cls = new JavaClassDeclaration;
+    ClassDeclaration *cls = new ClassDeclaration;
     if (token.type == TokenPrivate) {
         cls->accessMode = AccessPrivate;
         match(TokenPrivate);
@@ -85,12 +83,12 @@ JavaClassDeclaration *JavaParser::parseClass()
     /* } */
     match(TokenRightCurly);
 
-    return cls;
+    return Node(NodeClass, cls);
 }
 
-JavaMethodDeclaration *JavaParser::parseMethod()
+Node JavaParser::parseMethod()
 {
-    JavaMethodDeclaration *method = new JavaMethodDeclaration;
+    MethodDeclaration *method = new MethodDeclaration;
     
     method->accessMode = AccessDefault;
     method->staticMethod = false;
@@ -122,25 +120,25 @@ JavaMethodDeclaration *JavaParser::parseMethod()
     method->arguments = parseMethodArguments();
     method->body = parseBlock();
 
-    return method;
+    return Node(NodeMethod, method);
 }
 
-JavaArgs *JavaParser::parseMethodArguments()
+Node JavaParser::parseMethodArguments()
 {
-    JavaArgs *args = new JavaArgs;
+    NodeList *args = new NodeList;
     /* ( */
     match(TokenLeftBracket);
 
     if (token.type != TokenRightBracket)
         while (true) {
-            JavaArg *arg = new JavaArg;
+            Argument *arg = new Argument;
             arg->type = parseType();
 
             /* Argument name */
             arg->name = token.buffer;
             match(TokenId);
 
-            args->args.push_back(arg);
+            args->nodes.push_back(Node(NodeArgument, arg));
 
             /* , */
             if (token.type == TokenComma)
@@ -152,14 +150,14 @@ JavaArgs *JavaParser::parseMethodArguments()
     /* ) */
     match(TokenRightBracket);
 
-    return args;
+    return Node(NodeArgumentList, args);
 }
 
-JavaType *JavaParser::parseType()
+Node JavaParser::parseType()
 {
-    JavaType *jtype = new JavaType;
-    JavaTypeBase *base = new JavaTypeBase;
-    jtype->typeBase = base;
+    Type *jtype = new Type;
+    TypeBase *base = new TypeBase;
+    jtype->typeBase = Node(NodeTypeBase, base);
 
     switch (token.type) {
         case TokenInt:
@@ -189,34 +187,33 @@ JavaType *JavaParser::parseType()
         jtype->subCount++;
     }
 
-    return jtype;
+    return Node(NodeType, jtype);
 }
 
-JavaBlock *JavaParser::parseBlock()
+Node JavaParser::parseBlock()
 {
-    JavaBlock *block = new JavaBlock;
+    NodeList *block = new NodeList;
     
     /* { */
     match(TokenLeftCurly);
     
     while (token.type != TokenRightCurly) {
-        block->statements.push_back(parseStatement());
+        block->nodes.push_back(parseStatement());
     }
     
     /* } */
     match(TokenRightCurly);
     
-    return block;
+    return Node(NodeBlock, block);
 }
 
-JavaStatement *JavaParser::parseStatement()
+Node JavaParser::parseStatement()
 {
-    if (token.type == TokenIf)
-        return parseIf();
-    if (token.type == TokenWhile)
-        return parseWhile();
+    if (token.type == TokenIf ||
+            token.type == TokenWhile)
+        return parseConditional();
 
-    JavaStatement *st;
+    Node st;
 
     if (lookup.type == TokenId)
         st = parseVarDeclaration();
@@ -226,112 +223,111 @@ JavaStatement *JavaParser::parseStatement()
     return st;
 }
 
-JavaIf *JavaParser::parseIf()
+Node JavaParser::parseConditional()
 {
-    JavaIf *jif = new JavaIf;
+    BinaryNode *cond = new BinaryNode;
+    NodeTag tag;
 
-    match(TokenIf);
+    if (token.type == TokenIf)
+        tag = NodeIf;
+    else
+        tag = NodeWhile;
+
+    move();
     match(TokenLeftBracket);
-    jif->condition = parseExpression();
+    cond->left = parseExpression();
     match(TokenRightBracket);
-    jif->body = parseBlock();
+    cond->right = parseBlock();
 
-    return jif;
+    return Node(tag, cond);
 }
 
-JavaWhile *JavaParser::parseWhile()
-{
-    JavaWhile *jwhile = new JavaWhile;
-
-    match(TokenWhile);
-    match(TokenLeftBracket);
-    jwhile->condition = parseExpression();
-    match(TokenRightBracket);
-    jwhile->body = parseBlock();
-
-    return jwhile;
-}
-
-JavaVarDeclaration *JavaParser::parseVarDeclaration()
+Node JavaParser::parseVarDeclaration()
 {
     /* TODO */
-    return nullptr;
+    return Node();
 }
 
-JavaExpression *JavaParser::parseExpression()
+Node JavaParser::parseExpression()
 {
     return parseAssignment();
 }
 
-JavaExpression *JavaParser::parseAssignment()
+Node JavaParser::parseAssignment()
 {
-    JavaExpression *e = parseOr();
+    Node e = parseOr();
     if (token.type == TokenAssign) {
         match(TokenAssign);
-        e = new JavaAssignment(e, parseAssignment());
+        e = Node::binary(NodeAssign, e, parseAssignment());
     }
     return e;
 }
 
-JavaExpression *JavaParser::parseOr()
+Node JavaParser::parseOr()
 {
-    JavaExpression *e = parseAnd();
+    Node e = parseAnd();
     while (token.type == TokenOr) {
         match(TokenOr);
-        e = new JavaOr(e, parseAnd());
+        e = Node::binary(NodeOr, e, parseAnd());
     }
     return e;
 }
 
-JavaExpression *JavaParser::parseAnd()
+Node JavaParser::parseAnd()
 {
-    JavaExpression *e = parseComparison();
+    Node e = parseComparison();
     while (token.type == TokenAnd) {
         match(TokenAnd);
-        e = new JavaAnd(e, parseComparison());
+        e = Node::binary(NodeAnd, e, parseComparison());
     }
     return e;
 }
 
-JavaExpression *JavaParser::parseComparison()
+Node JavaParser::parseComparison()
 {
-    JavaExpression *e = parseSum();
+    NodeTag tag = NodeEmpty;
+    Node e = parseSum();
     JavaToken save = token;
     switch (token.type) {
         case TokenLess:
+            tag = NodeLess;
+            break;
         case TokenLessOrEqual:
-            move();
-            e = new JavaCmp(save.type, e, parseSum());
+            tag = NodeLeq;
             break;
         default:
             break;
     }
+    if (tag != NodeEmpty) {
+        move();
+        e = Node::binary(tag, e, parseSum());
+    }
     return e;
 }
 
-JavaExpression *JavaParser::parseSum()
+Node JavaParser::parseSum()
 {
-    JavaExpression *e = parseProduct();
+    Node e = parseProduct();
     while (token.type == TokenAdd) {
         match(TokenAdd);
-        e = new JavaAdd(e, parseProduct());
+        e = Node::binary(NodeAdd, e, parseProduct());
     }
     return e;
 }
 
-JavaExpression *JavaParser::parseProduct()
+Node JavaParser::parseProduct()
 {
-    JavaExpression *e = parseBracketedOrUnary();
+    Node e = parseBracketedOrUnary();
     while (token.type == TokenMul) {
         match(TokenMul);
-        e = new JavaMul(e, parseBracketedOrUnary());
+        e = Node::binary(NodeMul, e, parseBracketedOrUnary());
     }
     return e;
 }
 
-JavaExpression *JavaParser::parseBracketedOrUnary()
+Node JavaParser::parseBracketedOrUnary()
 {
-    JavaExpression *e;
+    Node e;
     if (token.type == TokenLeftBracket) {
         match(TokenLeftBracket);
         e = parseExpression();
@@ -341,34 +337,30 @@ JavaExpression *JavaParser::parseBracketedOrUnary()
     return e;
 }
 
-JavaExpression *JavaParser::parseUnary()
+Node JavaParser::parseUnary()
 {
-    JavaExpression *e = new JavaExpression;
+    Node e;
     if (token.type == TokenLogicalNot) {
         match(TokenLogicalNot);
-        /* It is possible that we need
-         * separate class for logical binaries
-         */
-        e = new JavaUnaryOp(TokenLogicalNot, parseBracketedOrUnary());
+        e = Node::unary(NodeLogicalNot, parseBracketedOrUnary());
     } else if (token.type == TokenIncrement) {
         match(TokenIncrement);
-        e = new JavaUnaryOp(TokenIncrement, parseBracketedOrUnary());
+        e = Node::unary(NodePreIncrement, parseBracketedOrUnary());
     } else if (token.type == TokenLeftBracket)
         e = parseBracketedOrUnary();
     else {
         e = parseAccessSequence();
-        /* Differentiate it with prefix increment */
         if (token.type == TokenIncrement) {
             match(TokenIncrement);
-            e = new JavaUnaryOp(TokenIncrement, e);
+            e = Node::unary(NodePostIncrement, e);
         }
     }
     return e;
 }
 
-JavaAccessSequence *JavaParser::parseAccessSequence()
+Node JavaParser::parseAccessSequence()
 {
-    JavaAccessSequence *s = nullptr;
+    Node s;
 
     bool tail = false;
     while (true) {
@@ -380,23 +372,32 @@ JavaAccessSequence *JavaParser::parseAccessSequence()
 
         if (!tail && (token.type == TokenString ||
                 token.type == TokenInteger)) {
-            JavaLiteral *literal = new JavaLiteral(token);
+            NodeTag tag;
+            Literal *literal = new Literal;
+            literal->lit = token.buffer;
+            if (token.type == TokenString)
+                tag = NodeStringLiteral;
+            else
+                tag = NodeIntegerLiteral;
             match(token.type);
-            return literal;
+            return Node(tag, literal);
         }
         if (token.type == TokenId &&
             lookup.type == TokenLeftBracket) {
-            JavaMethodCall *mc = new JavaMethodCall(token.buffer);
-            mc->name = token.buffer;
+            AccessElement *methodCall = new AccessElement;
+            NodeList *arguments = new NodeList;
+            methodCall->name = token.buffer;
+            methodCall->attribute =
+                    Node(NodeCallArguments, arguments);
 
             match(TokenId);
             match(TokenLeftBracket);
 
             if (token.type != TokenRightBracket)
                 while (true) {
-                    JavaExpression *arg = parseExpression();
+                    Node arg = parseExpression();
 
-                    mc->argExpressions.push_back(arg);
+                    arguments->nodes.push_back(arg);
 
                     /* , */
                     if (token.type == TokenComma)
@@ -408,30 +409,31 @@ JavaAccessSequence *JavaParser::parseAccessSequence()
             /* ) */
             match(TokenRightBracket);
 
-            mc->base = s;
-            s = mc;
+            methodCall->prev = s;
+            s = Node(NodeCallMethod, methodCall);
         }
         else if (token.type == TokenId) {
-            JavaIdAccess *id = new JavaIdAccess(token.buffer);
+            AccessElement *id = new AccessElement;
+            id->name = token.buffer;
             match(TokenId);
 
-            id->base = s;
-            s = id;
+            id->prev = s;
+            s = Node(NodeId, id);
         }
         else if (tail && !dot_matched &&
                  token.type == TokenLeftSquare) {
-            JavaExpression *index = new JavaExpression;
-
             /* [ */
             match(TokenLeftSquare);
 
-            index = parseExpression();
+            Node index = parseExpression();
 
             /* ] */
             match(TokenRightSquare);
 
-            JavaSubscript *sub = new JavaSubscript(index);
-            sub->base = s;
+            AccessElement *sub = new AccessElement;
+            sub->attribute = index;
+            sub->prev = s;
+            s = Node(NodeSubscript, sub);
         }
 
         if (token.type != TokenDot &&

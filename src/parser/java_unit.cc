@@ -1,76 +1,30 @@
 #include <parser/java_unit.h>
 
-JavaAssignment::JavaAssignment(JavaExpression *to,
-    JavaExpression * from)
+Node::Node()
 {
-    this->to = to;
-    this->from = from;
+    this->tag = NodeEmpty;
+    this->nodeData = nullptr;
 }
 
-bool JavaExpression::isVariable()
+Node::Node(NodeTag tag, void *nodeData)
 {
-    return false;
+    this->tag = tag;
+    this->nodeData = nodeData;
 }
 
-JavaOr::JavaOr(JavaExpression *left, JavaExpression *right)
+
+Node Node::binary(NodeTag tag, Node l, Node r)
 {
-    this->left = left;
-    this->right = right;
+    BinaryNode *bin = new BinaryNode;
+    bin->left = l;
+    bin->right = r;
+    return Node(tag, bin);
 }
 
-JavaAnd::JavaAnd(JavaExpression *left, JavaExpression *right)
-{
-    this->left = left;
-    this->right = right;
-}
 
-JavaAdd::JavaAdd(JavaExpression *left, JavaExpression *right)
+Node Node::unary(NodeTag tag, Node n)
 {
-    this->left = left;
-    this->right = right;
-}
-
-JavaMul::JavaMul(JavaExpression *left, JavaExpression *right)
-{
-    this->left = left;
-    this->right = right;
-}
-
-JavaCmp::JavaCmp(JavaTokenType type, JavaExpression *left,
-    JavaExpression *right)
-{
-    this->cmpToken = type;
-    this->left = left;
-    this->right = right;
-}
-
-JavaUnaryOp::JavaUnaryOp(JavaTokenType type, JavaExpression *e)
-{
-    this->opToken = type;
-    this->expr = e;
-}
-
-JavaAccessSequence::JavaAccessSequence()
-{
-    this->base = nullptr;
-}
-
-JavaMethodCall::JavaMethodCall(std::string name) :
-    JavaIdAccess(name)
-{
-}
-
-JavaIdAccess::JavaIdAccess(std::string name)
-{
-    this->name = name;
-}
-
-JavaSubscript::JavaSubscript(JavaExpression *index)
-{
-    this->subscriptExpression = index;
-}
-
-JavaLiteral::JavaLiteral(JavaToken token)
-{
-    this->literalToken = token;
+    UnaryNode *un = new UnaryNode;
+    un->next = n;
+    return Node(tag, un);
 }

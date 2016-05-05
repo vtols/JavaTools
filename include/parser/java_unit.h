@@ -21,201 +21,116 @@ enum JavaAccess
     AccessProtected
 };
 
-struct JavaFile;
-struct JavaImport;
-struct JavaClassDeclaration;
-struct JavaMethodDeclaration;
-struct JavaType;
-struct JavaTypeBase;
-struct JavaArgs;
-struct JavaArg;
-struct JavaBlock;
-struct JavaStatement;
-struct JavaVarDeclaration;
-struct JavaAssignment;
-struct JavaConditional;
-struct JavaIf;
-struct JavaWhile;
-struct JavaExpression;
-struct JavaBinaryOp;
-struct JavaAnd;
-struct JavaOr;
-struct JavaAdd;
-struct JavaMul;
-struct JavaUnaryOp;
-struct JavaCmp;
-struct JavaAccessSequence;
-struct JavaIdAccess;
-struct JavaMethodCall;
-struct JavaSubscript;
-
-struct JavaFile
+enum NodeTag
 {
-    std::list<JavaImport*> imports;
-    JavaClassDeclaration *jclass;
+    NodeEmpty,
+    NodeClass,
+    NodeMethod,
+    NodeType,
+    NodeTypeBase,
+    NodeArgumentList,
+    NodeArgument,
+    NodeBlock,
+    NodeIf,
+    NodeWhile,
+    NodeAssign,
+    NodeOr,
+    NodeAnd,
+    NodeLess,
+    NodeLeq,
+    NodeAdd,
+    NodeMul,
+    NodeLogicalNot,
+    NodePreIncrement,
+    NodePostIncrement,
+    NodeIntegerLiteral,
+    NodeStringLiteral,
+    NodeCallMethod,
+    NodeCallArguments,
+    NodeId,
+    NodeSubscript
 };
 
-struct JavaImport
+struct Node
 {
-    std::string importString;
+    NodeTag tag;
+    void *nodeData;
+
+    Node();
+    Node(NodeTag tag, void *nodeData);
+    static Node binary(NodeTag tag, Node l, Node r);
+    static Node unary(NodeTag tag, Node n);
 };
 
-struct JavaClassDeclaration
+struct SourceFile
+{
+    std::string package;
+    std::list<std::string> imports;
+    Node jclass;
+};
+
+struct ClassDeclaration
 {
     JavaAccess accessMode;
     std::string name;
-    std::list<JavaMethodDeclaration*> methods;
+    std::list<Node> methods;
 };
 
-struct JavaMethodDeclaration
+struct MethodDeclaration
 {
     bool staticMethod;
     JavaAccess accessMode;
     std::string name;
-    JavaType *returnType;
-    JavaArgs *arguments;
-    JavaBlock *body;
+    Node returnType;
+    Node arguments;
+    Node body;
 };
 
-struct JavaType
+struct Type
 {
-    JavaTypeBase *typeBase;
+    Node typeBase;
 
     /* TypeName[][][]... count*/
     uint8_t subCount;
 };
 
-struct JavaTypeBase
+struct TypeBase
 {
     JavaTypeKind kind;
     std::string name;
 };
 
-struct JavaArgs
+struct NodeList
 {
-    std::list<JavaArg*> args;
+    std::list<Node> nodes;
 };
 
-struct JavaArg
+struct BinaryNode
 {
-    JavaType *type;
+    Node left, right;
+};
+
+struct UnaryNode
+{
+    Node next;
+};
+
+struct Argument
+{
+    Node type;
     std::string name;
 };
 
-struct JavaBlock
+struct AccessElement
 {
-    std::list<JavaStatement*> statements;
-};
-
-struct JavaStatement
-{
-};
-
-struct JavaVarDeclaration : JavaStatement
-{
-};
-
-struct JavaConditional : JavaStatement
-{
-    JavaExpression *condition;
-    JavaBlock *body;
-};
-
-struct JavaIf : JavaConditional
-{
-};
-
-struct JavaWhile : JavaConditional
-{
-};
-
-struct JavaExpression : JavaStatement
-{
-    // return false; by default
-    // need to check if we use ++ and --
-    virtual bool isVariable();
-};
-
-struct JavaAssignment : JavaExpression
-{
-    JavaExpression *to, *from;
-    JavaAssignment(JavaExpression *to, JavaExpression *from);
-};
-
-struct JavaBinaryOp : JavaExpression
-{
-    JavaExpression *left, *right;
-};
-
-struct JavaAnd : JavaBinaryOp
-{
-    JavaAnd(JavaExpression *left, JavaExpression *right);
-};
-
-struct JavaOr : JavaBinaryOp
-{
-    JavaOr(JavaExpression *left, JavaExpression *right);
-};
-
-struct JavaAdd : JavaBinaryOp
-{
-    JavaAdd(JavaExpression *left, JavaExpression *right);
-};
-
-struct JavaMul : JavaBinaryOp
-{
-    JavaMul(JavaExpression *left, JavaExpression *right);
-};
-
-struct JavaUnaryOp : JavaExpression
-{
-    JavaTokenType opToken;
-    JavaExpression *expr;
-
-    JavaUnaryOp(JavaTokenType type, JavaExpression *e);
-};
-
-struct JavaCmp : JavaBinaryOp
-{
-    JavaTokenType cmpToken;
-
-    JavaCmp(JavaTokenType type, JavaExpression *left,
-        JavaExpression *right);
-};
-
-struct JavaAccessSequence : JavaExpression
-{
-    JavaAccessSequence *base;
-
-    JavaAccessSequence();
-};
-
-struct JavaIdAccess : JavaAccessSequence
-{
+    Node prev;
+    Node attribute;
     std::string name;
-
-    JavaIdAccess(std::string name);
 };
 
-struct JavaMethodCall : JavaIdAccess
+struct Literal
 {
-    std::list<JavaExpression*> argExpressions;
-
-    JavaMethodCall(std::string name);
-};
-
-struct JavaSubscript : JavaAccessSequence
-{
-    JavaExpression *subscriptExpression;
-
-    JavaSubscript(JavaExpression *index);
-};
-
-struct JavaLiteral : JavaAccessSequence
-{
-    JavaToken literalToken;
-
-    JavaLiteral(JavaToken token);
+    std::string lit;
 };
 
 #endif /* JAVA_UNIT_H */
