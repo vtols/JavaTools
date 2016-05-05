@@ -16,19 +16,19 @@ FileStream::~FileStream()
 void FileStream::next()
 {
     if (end || !f.get(c)) {
-        c = L'\0';
+        c = '\0';
         end = true;
     }
 }
 
-wchar_t FileStream::peek()
+char FileStream::peek()
 {
     return c;
 }
 
-wchar_t FileStream::read()
+char FileStream::read()
 {
-    wchar_t ret = c;
+    char ret = c;
     next();
     return ret;
 }

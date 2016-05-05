@@ -57,13 +57,13 @@ struct JavaFile
 
 struct JavaImport
 {
-    std::wstring importString;
+    std::string importString;
 };
 
 struct JavaClassDeclaration
 {
     JavaAccess accessMode;
-    std::wstring name;
+    std::string name;
     std::list<JavaMethodDeclaration*> methods;
 };
 
@@ -71,7 +71,7 @@ struct JavaMethodDeclaration
 {
     bool staticMethod;
     JavaAccess accessMode;
-    std::wstring name;
+    std::string name;
     JavaType *returnType;
     JavaArgs *arguments;
     JavaBlock *body;
@@ -88,7 +88,7 @@ struct JavaType
 struct JavaTypeBase
 {
     JavaTypeKind kind;
-    std::wstring name;
+    std::string name;
 };
 
 struct JavaArgs
@@ -99,7 +99,7 @@ struct JavaArgs
 struct JavaArg
 {
     JavaType *type;
-    std::wstring name;
+    std::string name;
 };
 
 struct JavaBlock
@@ -192,16 +192,16 @@ struct JavaAccessSequence : JavaExpression
 
 struct JavaIdAccess : JavaAccessSequence
 {
-    std::wstring name;
+    std::string name;
 
-    JavaIdAccess(std::wstring name);
+    JavaIdAccess(std::string name);
 };
 
 struct JavaMethodCall : JavaIdAccess
 {
     std::list<JavaExpression*> argExpressions;
 
-    JavaMethodCall(std::wstring name);
+    JavaMethodCall(std::string name);
 };
 
 struct JavaSubscript : JavaAccessSequence

@@ -5,10 +5,10 @@
 JavaToken::JavaToken()
 {
     this->type = TokenEof;
-    this->buffer = L"";
+    this->buffer = "";
 }
 
-JavaToken::JavaToken(JavaTokenType type, std::wstring buffer)
+JavaToken::JavaToken(JavaTokenType type, std::string buffer)
 {
     this->type = type;
     this->buffer = buffer;
@@ -17,7 +17,7 @@ JavaToken::JavaToken(JavaTokenType type, std::wstring buffer)
 JavaLexer::JavaLexer(CharStream *stream)
 {
     s = stream;
-    buffer = L"";
+    buffer = "";
 }
 
 JavaToken JavaLexer::next()
@@ -35,7 +35,7 @@ void JavaLexer::saveCharacter()
 
 void JavaLexer::clearBuffer()
 {
-    buffer = L"";
+    buffer = "";
 }
 
 JavaTokenType JavaLexer::getTokenType()
@@ -51,21 +51,21 @@ JavaTokenType JavaLexer::getTokenType()
         while (isalpha(s->peek()))
             saveCharacter();
 
-        if (buffer == L"import")
+        if (buffer == "import")
             return TokenImport;
-        else if (buffer == L"class")
+        else if (buffer == "class")
             return TokenClass;
-        else if (buffer == L"public")
+        else if (buffer == "public")
             return TokenPublic;
-        else if (buffer == L"static")
+        else if (buffer == "static")
             return TokenStatic;
-        else if (buffer == L"void")
+        else if (buffer == "void")
             return TokenVoid;
-        else if (buffer == L"int")
+        else if (buffer == "int")
             return TokenInt;
-        else if (buffer == L"if")
+        else if (buffer == "if")
             return TokenInt;
-        else if (buffer == L"while")
+        else if (buffer == "while")
             return TokenWhile;
         else
             return TokenId;
@@ -89,72 +89,72 @@ JavaTokenType JavaLexer::getTokenType()
 
     JavaTokenType tok;
     switch (s->peek()) {
-        case L'.':
+        case '.':
             tok = TokenDot;
             break;
-        case L',':
+        case ',':
             tok = TokenComma;
             break;
-        case L'*':
+        case '*':
             tok = TokenAsterisk;
             break;
-        case L';':
+        case ';':
             tok = TokenSemicolon;
             break;
-        case L'(':
+        case '(':
             tok = TokenLeftBracket;
             break;
-        case L')':
+        case ')':
             tok = TokenRightBracket;
             break;
-        case L'{':
+        case '{':
             tok = TokenLeftCurly;
             break;
-        case L'}':
+        case '}':
             tok = TokenRightCurly;
             break;
-        case L'[':
+        case '[':
             tok = TokenLeftSquare;
             break;
-        case L']':
+        case ']':
             tok = TokenRightSquare;
             break;
-        case L'!':
+        case '!':
             tok = TokenLogicalNot;
             break;
-        case L'<':
+        case '<':
             saveCharacter();
-            if (s->peek() == L'=')
+            if (s->peek() == '=')
                 tok = TokenLessOrEqual;
             else
                 return TokenLess;
             break;
-        case L'=':
+        case '=':
             saveCharacter();
-            if (s->peek() == L'=')
+            if (s->peek() == '=')
                 tok = TokenEqual;
             else
                 return TokenAssign;
             break;
-        case L'+':
+        case '+':
             saveCharacter();
-            if (s->peek() == L'=')
+            if (s->peek() == '=')
                 tok = TokenAddAssign;
-            if (s->peek() == L'+')
+            if (s->peek() == '+')
                 tok = TokenIncrement;
             else
                 return TokenAdd;
             break;
         case '&':
             saveCharacter();
-            if (s->peek() == L'&')
+            if (s->peek() == '&')
                 tok = TokenLogicalAnd;
             else
                 return TokenAnd;
             break;
         case '|':
             saveCharacter();
-            if (s->peek() == L'|')
+            if (s->peek() == '|')
                 tok = TokenLogicalOr;
             else
                 return TokenOr;

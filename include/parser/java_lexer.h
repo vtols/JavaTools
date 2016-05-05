@@ -61,9 +61,9 @@ class JavaToken
 {
 public:
     JavaToken();
-    JavaToken(JavaTokenType type, std::wstring buffer);
+    JavaToken(JavaTokenType type, std::string buffer);
     JavaTokenType type;
-    std::wstring buffer;
+    std::string buffer;
 };
 
 class JavaLexer
@@ -75,7 +75,7 @@ public:
 
 private:
     CharStream *s;
-    std::wstring buffer;
+    std::string buffer;
 
     JavaTokenType getTokenType();
     void saveCharacter();

@@ -37,7 +37,7 @@ std::list<JavaImport*> JavaParser::parseImports()
     std::list<JavaImport*> imports;
     while (token.type == TokenImport) {
         JavaImport *import = new JavaImport;
-        import->importString = L"";
+        import->importString = "";
 
         match(TokenImport);
         while (token.type != TokenSemicolon) {
@@ -45,7 +45,7 @@ std::list<JavaImport*> JavaParser::parseImports()
             match(TokenId);
             if (token.type == TokenDot) {
                 match(TokenDot);
-                import->importString += L'.';
+                import->importString += '.';
             }
             else
                 break;

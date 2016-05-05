@@ -55,12 +55,12 @@ JavaAccessSequence::JavaAccessSequence()
     this->base = nullptr;
 }
 
-JavaMethodCall::JavaMethodCall(std::wstring name) :
+JavaMethodCall::JavaMethodCall(std::string name) :
     JavaIdAccess(name)
 {
 }
 
-JavaIdAccess::JavaIdAccess(std::wstring name)
+JavaIdAccess::JavaIdAccess(std::string name)
 {
     this->name = name;
 }

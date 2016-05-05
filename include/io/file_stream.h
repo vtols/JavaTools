@@ -12,13 +12,13 @@ public:
     FileStream(std::string path);
     virtual ~FileStream();
 
-    wchar_t read();
-    wchar_t peek();
+    char read();
+    char peek();
     bool eof();
 
 private:
-    std::wifstream f;
-    wchar_t c;
+    std::ifstream f;
+    char c;
     bool end;
 
     void next();

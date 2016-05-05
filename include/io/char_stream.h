@@ -6,8 +6,8 @@ class CharStream
 public:
     virtual ~CharStream() = 0;
     
-    virtual wchar_t read() = 0;
-    virtual wchar_t peek() = 0;
+    virtual char read() = 0;
+    virtual char peek() = 0;
     virtual bool eof() = 0;
 };
 
