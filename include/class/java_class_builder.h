@@ -71,6 +71,7 @@ public:
         std::string descriptor);
     void loadString(std::string str);
     void jump(uint8_t opCode, Label *label);
+    void frame();
     
     MemberInfo *build();
 
@@ -84,7 +85,8 @@ private:
     std::vector<uint8_t> code;
     ByteBuffer *codeBuilder;
     ByteStreamWriter *codeWriter;
-    std::vector<Label *> labels;
+    std::vector<Label*> labels;
+    std::vector<Frame*> frames;
 };
 
 class Label
@@ -95,6 +97,22 @@ public:
 
 private:
     std::vector<uint32_t> refPositions;
+};
+
+struct FrameType
+{
+    uint8_t tag;
+    std::string name;
+
+    FrameType(uint8_t tag);
+    FrameType(uint8_t tag, std::string name);
+};
+
+struct Frame
+{
+    uint8_t tag;
+    uint16_t ref;
+    std::vector<FrameType> locals, stack;
 };
 
 #endif /* JAVA_CLASS_BUILDER_H */

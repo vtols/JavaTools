@@ -220,6 +220,12 @@ void MethodBuilder::setMax(uint16_t maxStack, uint16_t maxLocals)
     this->maxLocals = maxLocals;
 }
 
+void MethodBuilder::frame(Frame *frame)
+{
+    frame.ref = codeBuilder->written;
+    frames.push_back(frame);
+}
+
 MemberInfo *MethodBuilder::build()
 {
     CodeAttribute *codeAttr = new CodeAttribute;
