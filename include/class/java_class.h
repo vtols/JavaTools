@@ -60,6 +60,18 @@ const uint16_t
     ACC_NATIVE = 0x0100,
     ACC_STRICT = 0x0800;
 
+const uint8_t
+    ITEM_Top = 0,
+    ITEM_Integer = 1,
+    ITEM_Float = 2,
+    ITEM_Double = 3,
+    ITEM_Long = 4,
+    ITEM_Null = 5,
+    ITEM_UninitializedThis = 6,
+    ITEM_Object = 7,
+    ITEM_Uninitialized = 8;
+
+
 struct ClassFile
 {
     uint32_t magic;
@@ -193,9 +205,26 @@ struct LineNumberTableAttribute : AttributeInfo
     void write(ByteStreamWriter *bs);
 };
 
+struct VerificationTypeInfo
+{
+    uint8_t tag;
+    uint16_t data;
+
+    static VerificationTypeInfo read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
+};
+
 struct StackMapFrame
 {
     uint8_t frameType;
+
+    uint16_t frameDelta;
+
+    uint16_t numberLocals;
+    std::vector<VerificationTypeInfo> locals;
+
+    uint16_t numberStack;
+    std::vector<VerificationTypeInfo> stack;
 
     static StackMapFrame *read(ByteStream *bs);
     virtual void write(ByteStreamWriter *bs);
@@ -210,16 +239,10 @@ struct StackMapTableAttribute : AttributeInfo
     void write(ByteStreamWriter *bs);
 };
 
-struct SameFrame : StackMapFrame
-{
-    static SameFrame *read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
-};
-
 struct SourceFileAttribute : AttributeInfo
 {
     uint16_t sourceFileIndex;
-    
+
     static SourceFileAttribute *read(ByteStream *bs);
     void write(ByteStreamWriter *bs);
 };

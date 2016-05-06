@@ -339,12 +339,20 @@ StackMapFrame *StackMapFrame::read(ByteStream *bs)
 {
     StackMapFrame *frame;
 
-    uint8_t type = bs->read8();
+    frame->frameType = type; = bs->read8();
 
-    if (type < 64)
-        frame = SameFrame::read(bs);
-
-    frame->frameType = type;
+    if (0 <= type && type <= 63) {
+        /* same_frame */
+    } else if (type == 251) {
+        /* same_frame_extended */
+        frame->frameDelta = bs->read16();
+    } else if (252 <= type && type <= 254) {
+        /* append_frame */
+        frame->frameDelta = bs->read16();
+        frame->numberLocals = type - 251;
+        for (int i = 0; i < frame->numberLocals; i++)
+            frame->locals.push_back(VerificationTypeInfo::read(bs));
+    }
 
     return frame;
 }
@@ -352,16 +360,18 @@ StackMapFrame *StackMapFrame::read(ByteStream *bs)
 void StackMapFrame::write(ByteStreamWriter *bs)
 {
     bs->write(frameType);
-}
 
-SameFrame *SameFrame::read(ByteStream *bs)
-{
-    return new SameFrame;
-}
-
-void SameFrame::write(ByteStreamWriter *bs)
-{
-    StackMapFrame::write(bs);
+    if (0 <= type && type <= 63) {
+        /* same_frame */
+    } else if (type == 251) {
+        /* same_frame_extended */
+        bs->write(frameDelta);
+    } else if (252 <= type && type <= 254) {
+        /* append_frame */
+        bs->write(frame->frameDelta);
+        for (int i = 0; i < numberLocals; i++)
+            locals[i].write(bs);
+    }
 }
 
 SourceFileAttribute *SourceFileAttribute::read(ByteStream *bs)
@@ -377,4 +387,22 @@ void SourceFileAttribute::write(ByteStreamWriter *bs)
     AttributeInfo::write(bs);
 
     bs->write(sourceFileIndex);
+}
+
+VerificationTypeInfo VerificationTypeInfo::read(ByteStream *bs)
+{
+    VerificationTypeInfo ver;
+
+    ver.tag = bs->read8();
+    if (ver.tag == ITEM_Object ||
+            ver.tag == ITEM_Uninitialized)
+        ver.data = bs->read16();
+}
+
+void VerificationTypeInfo::write(ByteStreamWriter *bs)
+{
+    bs->write(tag);
+    if (tag == ITEM_Object ||
+            tag == ITEM_Uninitialized)
+        bs->write(data);
 }
