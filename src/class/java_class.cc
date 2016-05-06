@@ -337,9 +337,10 @@ void StackMapTableAttribute::write(ByteStreamWriter *bs)
 
 StackMapFrame *StackMapFrame::read(ByteStream *bs)
 {
-    StackMapFrame *frame;
+    StackMapFrame *frame = new StackMapFrame;
 
-    frame->frameType = type; = bs->read8();
+    uint8_t type = bs->read8();
+    frame->frameType = type;
 
     if (0 <= type && type <= 63) {
         /* same_frame */
@@ -361,14 +362,14 @@ void StackMapFrame::write(ByteStreamWriter *bs)
 {
     bs->write(frameType);
 
-    if (0 <= type && type <= 63) {
+    if (0 <= frameType && frameType <= 63) {
         /* same_frame */
-    } else if (type == 251) {
+    } else if (frameType == 251) {
         /* same_frame_extended */
         bs->write(frameDelta);
-    } else if (252 <= type && type <= 254) {
+    } else if (252 <= frameType && frameType <= 254) {
         /* append_frame */
-        bs->write(frame->frameDelta);
+        bs->write(frameDelta);
         for (int i = 0; i < numberLocals; i++)
             locals[i].write(bs);
     }
@@ -397,6 +398,8 @@ VerificationTypeInfo VerificationTypeInfo::read(ByteStream *bs)
     if (ver.tag == ITEM_Object ||
             ver.tag == ITEM_Uninitialized)
         ver.data = bs->read16();
+
+    return ver;
 }
 
 void VerificationTypeInfo::write(ByteStreamWriter *bs)
