@@ -48,7 +48,9 @@ enum NodeTag
     NodeCallMethod,
     NodeCallArguments,
     NodeId,
-    NodeSubscript
+    NodeSubscript,
+    NodeVarDecl,
+    NodeVarList
 };
 
 struct Node

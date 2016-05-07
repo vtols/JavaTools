@@ -244,8 +244,34 @@ Node JavaParser::parseConditional()
 
 Node JavaParser::parseVarDeclaration()
 {
-    /* TODO */
-    return Node();
+    /* Type and list of names/assignments */
+    BinaryNode *varDecl = new BinaryNode;
+    NodeList *decls = new NodeList;
+
+    varDecl->left = parseType();
+    varDecl->right = Node(NodeVarList, decls);
+
+    while (token.type != TokenSemicolon) {
+        AccessElement *id = new AccessElement;
+        id->name = token.buffer;
+        match(TokenId);
+
+        Node varDecl = Node(NodeId, id);
+
+        if (token.type == TokenAssign) {
+            match(TokenAssign);
+            varDecl = Node::binary(
+                        NodeAssign, varDecl, parseExpression());
+        }
+
+        decls->nodes.push_back(varDecl);
+        if (token.type == TokenComma)
+            match(TokenComma);
+        else
+            break;
+    }
+
+    return Node(NodeVarDecl, varDecl);
 }
 
 Node JavaParser::parseExpression()
