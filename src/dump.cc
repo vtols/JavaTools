@@ -76,12 +76,15 @@ int main()
     mb->setAccessFlags(ACC_PUBLIC | ACC_STATIC);
     mb->setMax(2, 1);
 
+    Label l;
+    mb->frameSame();
+    mb->insertLabel(&l);
     mb->field(opcodes::GETSTATIC,
             "java/lang/System", "out", "Ljava/io/PrintStream;");
     mb->loadString("Hello World!");
     mb->invoke(opcodes::INVOKEVIRTUAL,
             "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
-    mb->instruction(opcodes::RETURN);
+    mb->jump(opcodes::GOTO, &l);
 
     cb.build(w);
 

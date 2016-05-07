@@ -126,17 +126,22 @@ void ClassBuilder::build(ByteStreamWriter* w)
     classFile.write(w);
 }
 
+void Label::setPosition(uint32_t pos)
+{
+    labelPosition = pos;
+}
+
 void Label::addRef(uint32_t at)
 {
     refPositions.push_back(at);
 }
 
-void Label::setJumps(uint32_t addr, ByteBuffer* codeBuilder)
+void Label::setJumps(ByteBuffer* codeBuilder)
 {
     uint32_t saveWritePos = codeBuilder->written;
     for (uint16_t i = 0; i < refPositions.size(); i++) {
         // +1 offset of address where writing with jump instruction address
-        int16_t offset = (int16_t) (addr - (int32_t) refPositions[i]) + 1;
+        int16_t offset = (int16_t) (labelPosition - (int32_t) refPositions[i]) + 1;
         codeBuilder->setPosition(refPositions[i]);
         codeBuilder->ByteStreamWriter::write((uint16_t) offset);
     }
@@ -178,7 +183,8 @@ void MethodBuilder::jump(uint8_t opCode, Label* label)
 
 void MethodBuilder::insertLabel(Label* label)
 {
-    label->setJumps(codeBuilder->written, codeBuilder);
+    label->setPosition(codeBuilder->written);
+    labels.push_back(label);
 }
 
 void MethodBuilder::instruction(uint8_t opCode)
@@ -222,12 +228,22 @@ void MethodBuilder::setMax(uint16_t maxStack, uint16_t maxLocals)
 
 void MethodBuilder::frame(Frame *frame)
 {
-    frame.ref = codeBuilder->written;
+    frame->ref = codeBuilder->written;
     frames.push_back(frame);
+}
+
+void MethodBuilder::frameSame()
+{
+    Frame *f = new Frame;
+    f->frameTag = same_frame;
+    frame(f);
 }
 
 MemberInfo *MethodBuilder::build()
 {
+    for (size_t i = 0; i < labels.size(); i++)
+        labels[i]->setJumps(codeBuilder);
+
     CodeAttribute *codeAttr = new CodeAttribute;
     codeAttr->length =
             codeAttr->maxStack = maxStack;
@@ -239,14 +255,42 @@ MemberInfo *MethodBuilder::build()
 
     codeAttr->exceptionTableLength = 0;
 
-    codeAttr->attributesCount = 0;
-    /*
-    SameFrame *s = new SameFrame;
-    s->frameType = 0;
-    cod*/
-
     codeAttr->nameIndex = cb->addUtf8("Code");
     codeAttr->length = 12 + code.size();
+
+    if (frames.size() != 0) {
+        codeAttr->attributesCount = 1;
+        uint16_t current = 0;
+
+        StackMapTableAttribute *tableAttr = new StackMapTableAttribute;
+        tableAttr->nameIndex = cb->addUtf8("StackMapTable");
+        tableAttr->length = 2;
+        tableAttr->numberOfEntries = frames.size();
+        for (size_t i = 0; i < frames.size(); i++) {
+            StackMapFrame *fr = new StackMapFrame;
+            uint16_t delta = frames[i]->ref - current;
+            switch (frames[i]->frameTag) {
+                case same_frame:
+                    if (delta < 64) {
+                        fr->frameType = delta;
+                        tableAttr->length += 1;
+                    } else {
+                        fr->frameType = 251;
+                        fr->frameDelta = delta;
+                        tableAttr->length += 3;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            tableAttr->entries.push_back(fr);
+            current = frames[i]->ref;
+        }
+        codeAttr->attributes.push_back(tableAttr);
+        codeAttr->length += tableAttr->length + 6;
+    } else {
+        codeAttr->attributesCount = 0;
+    }
 
     MemberInfo *methodInfo = new MemberInfo;
 

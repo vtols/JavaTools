@@ -12,6 +12,14 @@
 class ClassBuilder;
 class MethodBuilder;
 class Label;
+class Frame;
+class FrameType;
+
+enum FrameTag
+{
+    same_frame,
+    append_frame
+};
 
 class ClassBuilder
 {
@@ -71,7 +79,8 @@ public:
         std::string descriptor);
     void loadString(std::string str);
     void jump(uint8_t opCode, Label *label);
-    void frame();
+    void frameSame();
+    //void frameAppend(std::vector<FrameType> locals);
     
     MemberInfo *build();
 
@@ -87,32 +96,37 @@ private:
     ByteStreamWriter *codeWriter;
     std::vector<Label*> labels;
     std::vector<Frame*> frames;
+
+    void frame(Frame *f);
 };
 
 class Label
 {
 public:
+    void setPosition(uint32_t pos);
     void addRef(uint32_t at);
-    void setJumps(uint32_t addr, ByteBuffer *codeBuilder);
+    void setJumps(ByteBuffer *codeBuilder);
 
 private:
+    uint32_t labelPosition;
     std::vector<uint32_t> refPositions;
+};
+
+struct Frame
+{
+    uint8_t frameTag;
+    uint16_t ref;
+    std::vector<FrameType> locals, stack;
 };
 
 struct FrameType
 {
     uint8_t tag;
+    /* For object type */
     std::string name;
 
     FrameType(uint8_t tag);
     FrameType(uint8_t tag, std::string name);
-};
-
-struct Frame
-{
-    uint8_t tag;
-    uint16_t ref;
-    std::vector<FrameType> locals, stack;
 };
 
 #endif /* JAVA_CLASS_BUILDER_H */
