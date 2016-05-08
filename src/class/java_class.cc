@@ -141,6 +141,20 @@ IndexInfo *IndexInfo::read(ByteStream *bs)
     return ri;
 }
 
+void Const32Info::write(ByteStreamWriter *bs)
+{
+    ConstantPoolInfo::write(bs);
+    bs->write(value);
+}
+
+Const32Info *Const32Info::read(ByteStream *bs)
+{
+    Const32Info *ri = new Const32Info;
+
+    ri->value = bs->read32();
+    return ri;
+}
+
 void IndexInfo::write(ByteStreamWriter *bs)
 {
     ConstantPoolInfo::write(bs);

@@ -128,6 +128,14 @@ struct IndexInfo : ConstantPoolInfo
     void write(ByteStreamWriter *bs);
 };
 
+struct Const32Info : ConstantPoolInfo
+{
+    uint32_t value;
+
+    static Const32Info *read(ByteStream *bs);
+    void write(ByteStreamWriter *bs);
+};
+
 struct Utf8Info : ConstantPoolInfo
 {
     std::string str;

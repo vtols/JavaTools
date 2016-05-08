@@ -66,6 +66,15 @@ uint16_t ClassBuilder::addString(std::string str)
     return addNewItem(strInf);
 }
 
+uint16_t ClassBuilder::addInteger(int32_t integer)
+{
+    Const32Info *intInf = new Const32Info;
+
+    intInf->tag = CONSTANT_Integer;
+    intInf->value = integer;
+    return addNewItem(intInf);
+}
+
 // TODO Refactor code duplication
 
 uint16_t ClassBuilder::addFieldRef(
@@ -194,7 +203,21 @@ void MethodBuilder::instruction(uint8_t opCode)
 
 void MethodBuilder::loadString(std::string str)
 {
-    uint16_t ref = cb->addString(str);
+    loadRef(cb->addString(str));
+}
+
+void MethodBuilder::loadInteger(int32_t integer)
+{
+    if (-128 <= integer && integer <= 127) {
+        codeWriter->write(opcodes::BIPUSH);
+        codeWriter->write((uint8_t) integer);
+    } else {
+        loadRef(cb->addInteger(integer));
+    }
+}
+
+void MethodBuilder::loadRef(uint16_t ref)
+{
     if (ref < 256) {
         codeWriter->write(opcodes::LDC);
         codeWriter->write((uint8_t) ref);

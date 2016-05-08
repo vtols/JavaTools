@@ -28,6 +28,7 @@ public:
     MethodBuilder *createMethod(std::string name);
     uint16_t addUtf8(std::string str);
     uint16_t addClass(std::string name);
+    uint16_t addInteger(int32_t integer);
     uint16_t addString(std::string str);
     uint16_t addFieldRef(
         std::string className,
@@ -78,6 +79,7 @@ public:
         std::string method,
         std::string descriptor);
     void loadString(std::string str);
+    void loadInteger(int32_t integer);
     void jump(uint8_t opCode, Label *label);
     void frameSame();
     //void frameAppend(std::vector<FrameType> locals);
@@ -98,6 +100,7 @@ private:
     std::vector<Frame*> frames;
 
     void frame(Frame *f);
+    void loadRef(uint16_t ref);
 };
 
 class Label
