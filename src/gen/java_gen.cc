@@ -3,15 +3,15 @@
 ClassGenerator::ClassGenerator(SourceFile *source)
 {
     src = source;
+}
+
+ClassFile *ClassGenerator::generate()
+{
     classContext = (ClassDeclaration *) src->jclass.nodeData;
     className = classDecl->name;
     cb = new ClassBuilder(className);
     generate();
     delete cb;
-}
-
-ClassFile *ClassGenerator::generate()
-{
     for (Node methodNode : classContext->methods) {
         methodContext = (MethodDeclaration *) methodNode.nodeData;
         generateMethod();
@@ -62,8 +62,10 @@ void ClassGenerator::generateNode(Node st)
         case NodeMul:
             break;
         case NodeVarDecl:
+            generateVarDecl();
             break;
         case NodeStringLiteral:
+            generate
             break;
         case NodeIntegerLiteral:
             break;
@@ -87,7 +89,7 @@ void ClassGenerator::generateVarDecl(Node varDecl)
     }
 }
 
-void ClassGenerator::generateAssign()
+void ClassGenerator::generateAssign(Node assign)
 {
     BinaryNode *varAndExpr = (BinaryNode *) assign.nodeData;
     AccessElement *var = (AccessElement *) varAndExpr->left.nodeData;
@@ -152,4 +154,16 @@ void ClassGenerator::generateId(Node id)
     }
 
     mb->local(load_instruction, env->getIndexLocal(var->name));
+}
+
+void ClassGenerator::generateStringLiteral(Node lit)
+{
+    Literal *strLit = (Literal *) lit.nodeData;
+    mb->loadString(strLit->lit);
+}
+
+void ClassGenerator::generateIntegerLiteral(Node lit)
+{
+    Literal *intLit = (Literal *) lit.nodeData;
+    mb->loadInteger(std::stoi(intLit->lit));
 }

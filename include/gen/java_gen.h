@@ -11,6 +11,16 @@ class ClassGenerator
 public:
     ClassGenerator(SourceFile *source);
     ClassFile *generate();
+    void generateMethod();
+    void generateBlock(Node block);
+    void generateNode(Node st);
+    void generateVarDecl(Node varDecl);
+    void generateAssign(Node assign);
+    void generateAdd(Node add);
+    void generateMul(Node mul);
+    void generateId(Node id);
+    void generateStringLiteral(Node lit);
+    void generateIntegerLiteral(Node lit);
 
 private:
     SourceFile *src;
