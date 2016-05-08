@@ -86,7 +86,8 @@ int main()
             "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
     mb->jump(opcodes::GOTO, &l);
 
-    cb.build(w);
+    ClassFile *cf = cb.build();
+    cf->write(w);
 
     return 0;
 }

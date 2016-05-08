@@ -109,30 +109,32 @@ uint16_t ClassBuilder::addMethodRef(
     return addNewItem(methodRef);
 }
 
-void ClassBuilder::build(ByteStreamWriter* w)
+ClassFile* ClassBuilder::build()
 {
-    classFile.magic = 0xCAFEBABE;
+    ClassFile *classFile = new ClassFile;
 
-    classFile.minorVersion = 0;
-    classFile.majorVersion = 52;
+    classFile->magic = 0xCAFEBABE;
 
-    classFile.interfacesCount = 0;
-    classFile.fieldsCount = 0;
-    classFile.attributesCount = 0;
+    classFile->minorVersion = 0;
+    classFile->majorVersion = 52;
 
-    classFile.methodsCount = methodBuilders.size();
+    classFile->interfacesCount = 0;
+    classFile->fieldsCount = 0;
+    classFile->attributesCount = 0;
+
+    classFile->methodsCount = methodBuilders.size();
     for (uint16_t i = 0; i < methodBuilders.size(); i++)
-        classFile.methods.push_back(methodBuilders[i]->build());
-    classFile.thisClass = addClass(name);
-    classFile.superClass = addClass("java/lang/Object");
+        classFile->methods.push_back(methodBuilders[i]->build());
+    classFile->thisClass = addClass(name);
+    classFile->superClass = addClass("java/lang/Object");
 
-    classFile.accessFlags = ACC_SUPER;
+    classFile->accessFlags = ACC_SUPER;
 
     /* Save pool when all constants created */
-    classFile.constantPoolCount = constCounter;
-    classFile.constantPool = constantPool;
+    classFile->constantPoolCount = constCounter;
+    classFile->constantPool = constantPool;
 
-    classFile.write(w);
+    return classFile;
 }
 
 void Label::setPosition(uint32_t pos)

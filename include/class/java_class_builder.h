@@ -38,13 +38,11 @@ public:
         std::string className,
         std::string methodName,
         std::string typeName);
-    void build(ByteStreamWriter *w);
+    ClassFile *build();
 
 
 private:
     std::string name;
-    
-    ClassFile classFile;
     
     std::vector<ConstantPoolInfo*> constantPool;
     uint16_t constCounter = 1;
