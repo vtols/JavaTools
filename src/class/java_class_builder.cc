@@ -264,6 +264,41 @@ void MethodBuilder::frameSame()
     frame(f);
 }
 
+void MethodBuilder::frameAppend(std::vector<FrameType> &types)
+{
+    Frame *f = new Frame;
+    f->frameTag = append_frame;
+    /* types size must be in range 1..3 */
+    f->locals = types;
+    frame(f);
+}
+
+void MethodBuilder::local(uint8_t opCode, uint16_t index)
+{
+    if (index <= 3) {
+        switch (opCode) {
+            case opcodes::ILOAD:
+                instruction(opcodes::ILOAD_0 + index);
+                return;
+            case opcodes::ISTORE:
+                instruction(opcodes::ISTORE_0 + index);
+                return;
+            case opcodes::ALOAD:
+                instruction(opcodes::ALOAD_0 + index);
+                return;
+            case opcodes::ASTORE:
+                instruction(opcodes::ASTORE_0 + index);
+                return;
+            default:
+                break;
+        }
+    }
+
+    /* Now doesn't work with index > 255 */
+    codeWriter->write(opCode);
+    codeWriter->write((uint8_t) index);
+}
+
 MemberInfo *MethodBuilder::build()
 {
     for (size_t i = 0; i < labels.size(); i++)
@@ -285,32 +320,8 @@ MemberInfo *MethodBuilder::build()
 
     if (frames.size() != 0) {
         codeAttr->attributesCount = 1;
-        uint16_t current = 0;
 
-        StackMapTableAttribute *tableAttr = new StackMapTableAttribute;
-        tableAttr->nameIndex = cb->addUtf8("StackMapTable");
-        tableAttr->length = 2;
-        tableAttr->numberOfEntries = frames.size();
-        for (size_t i = 0; i < frames.size(); i++) {
-            StackMapFrame *fr = new StackMapFrame;
-            uint16_t delta = frames[i]->ref - current;
-            switch (frames[i]->frameTag) {
-                case same_frame:
-                    if (delta < 64) {
-                        fr->frameType = delta;
-                        tableAttr->length += 1;
-                    } else {
-                        fr->frameType = 251;
-                        fr->frameDelta = delta;
-                        tableAttr->length += 3;
-                    }
-                    break;
-                default:
-                    break;
-            }
-            tableAttr->entries.push_back(fr);
-            current = frames[i]->ref;
-        }
+        StackMapTableAttribute *tableAttr = buildStackMapTable();
         codeAttr->attributes.push_back(tableAttr);
         codeAttr->length += tableAttr->length + 6;
     } else {
@@ -328,3 +339,58 @@ MemberInfo *MethodBuilder::build()
 
     return methodInfo;
 }
+
+StackMapTableAttribute *MethodBuilder::buildStackMapTable()
+{
+    StackMapTableAttribute *tableAttr = new StackMapTableAttribute;
+
+    uint16_t current = 0;
+    tableAttr->nameIndex = cb->addUtf8("StackMapTable");
+    tableAttr->length = 2;
+    tableAttr->numberOfEntries = frames.size();
+    for (size_t i = 0; i < frames.size(); i++) {
+        StackMapFrame *fr = new StackMapFrame;
+        uint16_t delta = frames[i]->ref - current;
+        switch (frames[i]->frameTag) {
+            case same_frame:
+                if (delta < 64) {
+                    fr->frameType = delta;
+                    tableAttr->length += 1;
+                } else {
+                    fr->frameType = 251;
+                    fr->frameDelta = delta;
+                    tableAttr->length += 3;
+                }
+                break;
+            case append_frame:
+                fr->numberLocals = frames[i]->locals.size();
+                fr->frameType = 251 + fr->numberLocals;
+                fr->frameDelta = delta;
+                tableAttr->length += 3;
+                for (FrameType ft : frames[i]->locals) {
+                    VerificationTypeInfo ver;
+                    ver.tag = ft.tag;
+                    tableAttr->length += 1;
+                    if (ft.tag == ITEM_Object) {
+                        /* Code for object here */
+                    } else if (ft.tag == ITEM_Uninitialized) {
+                    }
+                    fr->locals.push_back(ver);
+                }
+                break;
+            default:
+                break;
+        }
+        tableAttr->entries.push_back(fr);
+        current = frames[i]->ref;
+    }
+
+    return tableAttr;
+}
+
+FrameType::FrameType(uint8_t tag) :
+    tag(tag) {}
+
+FrameType::FrameType(uint8_t tag, std::string name) :
+    tag(tag), name(name) {}
+

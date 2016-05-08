@@ -78,8 +78,10 @@ public:
         std::string descriptor);
     void loadString(std::string str);
     void loadInteger(int32_t integer);
+    void local(uint8_t opCode, uint16_t index);
     void jump(uint8_t opCode, Label *label);
     void frameSame();
+    void frameAppend(std::vector<FrameType> &types);
     //void frameAppend(std::vector<FrameType> locals);
     
     MemberInfo *build();
@@ -99,6 +101,7 @@ private:
 
     void frame(Frame *f);
     void loadRef(uint16_t ref);
+    StackMapTableAttribute *buildStackMapTable();
 };
 
 class Label
@@ -116,6 +119,7 @@ private:
 struct Frame
 {
     uint8_t frameTag;
+    /* Position in code */
     uint16_t ref;
     std::vector<FrameType> locals, stack;
 };
