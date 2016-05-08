@@ -101,6 +101,9 @@ ConstantPoolInfo *ConstantPoolInfo::read(ByteStream *bs)
         case CONSTANT_Class:
             ci = IndexInfo::read(bs);
             break;
+        case CONSTANT_Integer:
+            ci = Const32Info::read(bs);
+            break;
         case CONSTANT_Utf8:
             ci = Utf8Info::read(bs);
             break;
