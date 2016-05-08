@@ -3,6 +3,7 @@
 
 #include <map>
 
+#include <class/java_class_builder.h>
 #include <parser/java_unit.h>
 
 class ClassGenerator
@@ -32,7 +33,10 @@ public:
     std::string getClass(std::string name);
 
     int putLocal(std::string name, Node type);
-    Node getLocal(std::string name);
+    Node getTypeLocal(std::string name);
+    uint8_t getIndexLocal(std::string name);
+    void setInitLocal(std::string name);
+    bool getInitLocal(std::string name);
 
     static Environment *open(Environment *parent);
     static Environment *close(Environment *env);
