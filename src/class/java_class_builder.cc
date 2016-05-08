@@ -210,7 +210,11 @@ void MethodBuilder::loadString(std::string str)
 
 void MethodBuilder::loadInteger(int32_t integer)
 {
-    if (-128 <= integer && integer <= 127) {
+    if (integer == -1) {
+        instruction(opcodes::ICONST_M1);
+    } else if (0 <= integer && integer <= 5) {
+        instruction(opcodes::ICONST_0 + integer);
+    } else if (-128 <= integer && integer <= 127) {
         codeWriter->write(opcodes::BIPUSH);
         codeWriter->write((uint8_t) integer);
     } else {

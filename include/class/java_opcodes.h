@@ -6,6 +6,13 @@
 namespace opcodes
 {
     const uint8_t
+        ICONST_M1     = 0x02,
+        ICONST_0      = 0x03,
+        ICONST_1      = 0x04,
+        ICONST_2      = 0x05,
+        ICONST_3      = 0x06,
+        ICONST_4      = 0x07,
+        ICONST_5      = 0x08,
         BIPUSH        = 0x10,
         LDC           = 0x12,
         LDC_W         = 0x13,
