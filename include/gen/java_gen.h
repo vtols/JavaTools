@@ -11,16 +11,6 @@ class ClassGenerator
 public:
     ClassGenerator(SourceFile *source);
     ClassFile *generate();
-    void generateMethod();
-    void generateBlock(Node block);
-    void generateNode(Node st);
-    void generateVarDecl(Node varDecl);
-    void generateAssign(Node assign);
-    void generateAdd(Node add);
-    void generateMul(Node mul);
-    void generateId(Node id);
-    void generateStringLiteral(Node lit);
-    void generateIntegerLiteral(Node lit);
 
 private:
     SourceFile *src;
@@ -32,27 +22,39 @@ private:
     std::string methodName;
     MethodDeclaration *methodContext;
     MethodBuilder *mb;
+
+    void generateMethods();
+    void generateMethod();
+    void generateBlock(Node block);
+    void generateNode(Node st);
+    void generateVarDecl(Node varDecl);
+    void generateAssign(Node assign);
+    void generateAdd(Node add);
+    void generateMul(Node mul);
+    void generateId(Node id);
+    void generateStringLiteral(Node lit);
+    void generateIntegerLiteral(Node lit);
 };
 
 class Environment
 {
 public:
-    Environment();
+    Environment(Environment *parent);
 
     bool putClass(std::string name, std::string qualName);
     std::string getClass(std::string name);
 
     int putLocal(std::string name, Node type);
     Node getTypeLocal(std::string name);
-    uint8_t getIndexLocal(std::string name);
-    void setInitLocal(std::string name);
+    int getIndexLocal(std::string name);
+    bool setInitLocal(std::string name);
     bool getInitLocal(std::string name);
 
     static Environment *open(Environment *parent);
     static Environment *close(Environment *env);
 
 private:
-    Environment *parent;
+    Environment *parentEnv;
 
     // Map class name to qualified name
     std::map<std::string, std::string> classIndex;
