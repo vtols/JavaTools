@@ -18,6 +18,11 @@ Environment *Environment::close(Environment *env)
     return prev;
 }
 
+int Environment::localsCount()
+{
+    return maxLocals;
+}
+
 bool Environment::putClass(std::string name, std::string qualName)
 {
     if (classIndex.find(name) != classIndex.end())
@@ -53,6 +58,8 @@ int Environment::getIndexLocal(std::string name)
 {
     if (localIndex.find(name) == localIndex.end())
         return -1;
+
+    return localIndex[name];
 }
 
 Node Environment::getTypeLocal(std::string name)

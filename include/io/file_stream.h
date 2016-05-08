@@ -19,7 +19,7 @@ public:
 private:
     std::ifstream f;
     char c;
-    bool end;
+    bool end = false;
 
     void next();
 };

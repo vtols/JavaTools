@@ -43,7 +43,6 @@ enum JavaTokenType
     TokenLess,
     TokenLessOrEqual,
     TokenAdd,
-    TokenMul,
     TokenAddAssign,
     TokenIncrement,
     TokenNot,

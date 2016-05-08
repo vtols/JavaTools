@@ -344,8 +344,8 @@ Node JavaParser::parseSum()
 Node JavaParser::parseProduct()
 {
     Node e = parseBracketedOrUnary();
-    while (token.type == TokenMul) {
-        match(TokenMul);
+    while (token.type == TokenAsterisk) {
+        match(TokenAsterisk);
         e = Node::binary(NodeMul, e, parseBracketedOrUnary());
     }
     return e;

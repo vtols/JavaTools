@@ -6,6 +6,9 @@
 #include <class/java_class_builder.h>
 #include <parser/java_unit.h>
 
+class ClassGenerator;
+class Environment;
+
 class ClassGenerator
 {
 public:
@@ -26,9 +29,9 @@ private:
     void generateMethods();
     void generateMethod();
     void generateBlock(Node block);
-    void generateNode(Node st);
+    void generateNode(Node st, bool dropResult);
     void generateVarDecl(Node varDecl);
-    void generateAssign(Node assign);
+    void generateAssign(Node assign, bool dropResult);
     void generateAdd(Node add);
     void generateMul(Node mul);
     void generateId(Node id);
@@ -40,6 +43,8 @@ class Environment
 {
 public:
     Environment(Environment *parent);
+
+    int localsCount();
 
     bool putClass(std::string name, std::string qualName);
     std::string getClass(std::string name);

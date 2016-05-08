@@ -29,9 +29,18 @@ set(SOURCES_javac
     ${SOURCE_PATH}/javac.cc
     ${SOURCE_PATH}/io/char_stream.cc
     ${SOURCE_PATH}/io/file_stream.cc
+    ${SOURCE_PATH}/io/byte_stream.cc
+    ${SOURCE_PATH}/io/byte_stream_writer.cc
+    ${SOURCE_PATH}/io/file_byte_stream.cc
+    ${SOURCE_PATH}/io/file_byte_stream_writer.cc
+    ${SOURCE_PATH}/io/byte_buffer.cc
     ${SOURCE_PATH}/parser/java_lexer.cc
     ${SOURCE_PATH}/parser/java_unit.cc
-    ${SOURCE_PATH}/parser/java_parser.cc)
+    ${SOURCE_PATH}/parser/java_parser.cc
+    ${SOURCE_PATH}/class/java_class_builder.cc
+    ${SOURCE_PATH}/class/java_class.cc
+    ${SOURCE_PATH}/gen/java_gen.cc
+    ${SOURCE_PATH}/gen/java_env.cc)
 
 add_executable(${BINARY_javac} ${SOURCES_javac})
 

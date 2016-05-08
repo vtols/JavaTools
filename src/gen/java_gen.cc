@@ -10,7 +10,7 @@ ClassFile *ClassGenerator::generate()
     env = Environment::open(nullptr);
 
     classContext = (ClassDeclaration *) src->jclass.nodeData;
-    className = classDecl->name;
+    className = classContext->name;
 
     cb = new ClassBuilder(className);
     generateMethods();
@@ -35,6 +35,12 @@ void ClassGenerator::generateMethod()
     methodName = methodContext->name;
     mb = cb->createMethod(methodName);
 
+    /* Cheating, must generate access and descriptor */
+    if (methodName == "main") {
+        mb->setDescriptor("([Ljava/lang/String;)V");
+        mb->setAccessFlags(ACC_PUBLIC | ACC_STATIC);
+    }
+
     env = Environment::open(env);
 
     Node argNodeList = methodContext->arguments;
@@ -45,6 +51,16 @@ void ClassGenerator::generateMethod()
         env->putLocal(arg->name, arg->type);
     }
     generateBlock(methodContext->body);
+
+    mb->field(opcodes::GETSTATIC,
+            "java/lang/System", "out", "Ljava/io/PrintStream;");
+    mb->local(opcodes::ILOAD, 1);
+    mb->invoke(opcodes::INVOKEVIRTUAL,
+            "java/io/PrintStream", "println", "(I)V");
+    mb->instruction(opcodes::RETURN);
+
+    /* Must generate maxLocals */
+    mb->setMax(100, env->localsCount());
 
     env = Environment::close(env);
 }
@@ -60,7 +76,7 @@ void ClassGenerator::generateBlock(Node block)
 
 void ClassGenerator::generateNode(Node st, bool dropResult = false)
 {
-    switch (stNode.tag) {
+    switch (st.tag) {
     /*
         case NodeIf:
             break;
@@ -81,6 +97,9 @@ void ClassGenerator::generateNode(Node st, bool dropResult = false)
             generateVarDecl(st);
             dropResult = false;
             break;
+        case NodeId:
+            generateId(st);
+            break;
         case NodeStringLiteral:
             generateStringLiteral(st);
             break;
@@ -100,13 +119,18 @@ void ClassGenerator::generateVarDecl(Node varDecl)
     BinaryNode *typeAndAssign = (BinaryNode *) varDecl.nodeData;
     Node type = typeAndAssign->left;
 
-    std::list<Node> assignList = ((NodeList *) typeAndAssign->right)->nodes;
+    std::list<Node> assignList = ((NodeList *) typeAndAssign->right.nodeData)->nodes;
 
     for (Node assign : assignList) {
-        BinaryNode *varAndExpr = (BinaryNode *) assign.nodeData;
-        AccessElement *var = (AccessElement *) varAndExpr->left.nodeData;
-        env->putLocal(var->name, type);
-        generateAssign(assign, true);
+        if (assign.tag == NodeAssign) {
+            BinaryNode *varAndExpr = (BinaryNode *) assign.nodeData;
+            AccessElement *var = (AccessElement *) varAndExpr->left.nodeData;
+            env->putLocal(var->name, type);
+            generateAssign(assign, true);
+        } else {
+            AccessElement *var = (AccessElement *) assign.nodeData;
+            env->putLocal(var->name, type);
+        }
     }
 }
 
@@ -115,12 +139,12 @@ void ClassGenerator::generateAssign(Node assign, bool dropResult)
     BinaryNode *varAndExpr = (BinaryNode *) assign.nodeData;
     AccessElement *var = (AccessElement *) varAndExpr->left.nodeData;
 
-    generateNode(varExpr->right);
+    generateNode(varAndExpr->right);
 
     Type *type = (Type *) env->getTypeLocal(var->name).nodeData;
     JavaTypeKind kind = ((TypeBase *) type->typeBase.nodeData)->kind;
 
-    uint8_t store_instruction, load_istruction;
+    uint8_t store_instruction, load_instruction;
 
     switch (kind) {
         case TypeInteger:
@@ -130,6 +154,8 @@ void ClassGenerator::generateAssign(Node assign, bool dropResult)
         case TypeReference:
             store_instruction = opcodes::ASTORE;
             load_instruction = opcodes::ALOAD;
+            break;
+        default:
             break;
     }
 
@@ -176,6 +202,8 @@ void ClassGenerator::generateId(Node id)
             break;
         case TypeReference:
             load_instruction = opcodes::ALOAD;
+            break;
+        default:
             break;
     }
 
