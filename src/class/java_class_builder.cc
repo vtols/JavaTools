@@ -217,6 +217,9 @@ void MethodBuilder::loadInteger(int32_t integer)
     } else if (-128 <= integer && integer <= 127) {
         codeWriter->write(opcodes::BIPUSH);
         codeWriter->write((uint8_t) integer);
+    } else if (-32768 <= integer && integer <= 32767) {
+        codeWriter->write(opcodes::SIPUSH);
+        codeWriter->write((uint16_t) integer);
     } else {
         loadRef(cb->addInteger(integer));
     }

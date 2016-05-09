@@ -14,6 +14,7 @@ namespace opcodes
         ICONST_4      = 0x07,
         ICONST_5      = 0x08,
         BIPUSH        = 0x10,
+        SIPUSH        = 0x11,
         LDC           = 0x12,
         LDC_W         = 0x13,
         LDC2_W        = 0x14,
