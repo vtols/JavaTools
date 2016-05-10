@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <io/byte_writer.h>
 #include <class/java_class.h>
 
@@ -15,7 +13,6 @@ ClassFile ClassFile::read(ByteReader *bs)
     cf.constantPoolCount = bs->read16();
     ConstantPoolInfo *ci;
     for (int i = 1; i < cf.constantPoolCount; i++) {
-        std::cout << "Reading const #" << i << std::endl;
         ci = ConstantPoolInfo::read(bs);
         cf.constantPool.push_back(ci);
     }
