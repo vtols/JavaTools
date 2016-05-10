@@ -59,3 +59,12 @@ set(SOURCES_dump
 )
 add_executable(${BINARY_dump} ${SOURCES_dump})
 target_link_libraries(${BINARY_dump} ${LIB_javatools})
+
+set(BINARY_java java)
+set(SOURCES_java
+
+    ${SOURCE_PATH}/java.cc
+    ${SOURCE_PATH}/jvm/jvm.cc
+)
+add_executable(${BINARY_java} ${SOURCES_java})
+target_link_libraries(${BINARY_java} ${LIB_javatools})
