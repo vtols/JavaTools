@@ -23,9 +23,9 @@ include_directories (
     "${INCLUDE_PATH}"
 )
 
-set(BINARY_javac javac)
+set(LIB_javatools javatools)
+set(SOURCES_javatools
 
-set(SOURCES_javac
     ${SOURCE_PATH}/javac.cc
     ${SOURCE_PATH}/io/char_stream.cc
     ${SOURCE_PATH}/io/file_stream.cc
@@ -39,21 +39,23 @@ set(SOURCES_javac
     ${SOURCE_PATH}/parser/java_parser.cc
     ${SOURCE_PATH}/class/java_class_builder.cc
     ${SOURCE_PATH}/class/java_class.cc
-    ${SOURCE_PATH}/gen/java_gen.cc
-    ${SOURCE_PATH}/gen/java_env.cc)
+)
+ADD_LIBRARY(${LIB_javatools} STATIC ${SOURCES_javatools} )
 
+set(BINARY_javac javac)
+set(SOURCES_javac
+
+    ${SOURCE_PATH}/javac.cc
+    ${SOURCE_PATH}/gen/java_gen.cc
+    ${SOURCE_PATH}/gen/java_env.cc
+)
 add_executable(${BINARY_javac} ${SOURCES_javac})
+target_link_libraries(${BINARY_javac} ${LIB_javatools})
 
 set(BINARY_dump dump)
-
 set(SOURCES_dump
-    ${SOURCE_PATH}/dump.cc
-    ${SOURCE_PATH}/io/byte_stream.cc
-    ${SOURCE_PATH}/io/byte_stream_writer.cc
-    ${SOURCE_PATH}/io/file_byte_stream.cc
-    ${SOURCE_PATH}/io/file_byte_stream_writer.cc
-    ${SOURCE_PATH}/io/byte_buffer.cc
-    ${SOURCE_PATH}/class/java_class_builder.cc
-    ${SOURCE_PATH}/class/java_class.cc)
 
+    ${SOURCE_PATH}/dump.cc
+)
 add_executable(${BINARY_dump} ${SOURCES_dump})
+target_link_libraries(${BINARY_dump} ${LIB_javatools})
