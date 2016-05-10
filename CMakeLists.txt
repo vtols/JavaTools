@@ -29,10 +29,10 @@ set(SOURCES_javatools
     ${SOURCE_PATH}/javac.cc
     ${SOURCE_PATH}/io/char_stream.cc
     ${SOURCE_PATH}/io/file_stream.cc
-    ${SOURCE_PATH}/io/byte_stream.cc
-    ${SOURCE_PATH}/io/byte_stream_writer.cc
-    ${SOURCE_PATH}/io/file_byte_stream.cc
-    ${SOURCE_PATH}/io/file_byte_stream_writer.cc
+    ${SOURCE_PATH}/io/byte_reader.cc
+    ${SOURCE_PATH}/io/byte_writer.cc
+    ${SOURCE_PATH}/io/file_byte_reader.cc
+    ${SOURCE_PATH}/io/file_byte_writer.cc
     ${SOURCE_PATH}/io/byte_buffer.cc
     ${SOURCE_PATH}/parser/java_lexer.cc
     ${SOURCE_PATH}/parser/java_unit.cc

@@ -154,7 +154,7 @@ void Label::setJumps(ByteBuffer* codeBuilder)
         // +1 offset of address where writing with jump instruction address
         int16_t offset = (int16_t) (labelPosition - (int32_t) refPositions[i]) + 1;
         codeBuilder->setPosition(refPositions[i]);
-        codeBuilder->ByteStreamWriter::write((uint16_t) offset);
+        codeBuilder->ByteWriter::write((uint16_t) offset);
     }
     codeBuilder->written = saveWritePos;
     codeBuilder->setPosition(saveWritePos);

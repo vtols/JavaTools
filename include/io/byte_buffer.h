@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include <io/byte_stream_writer.h>
+#include <io/byte_writer.h>
 
-class ByteBuffer : public ByteStreamWriter
+class ByteBuffer : public ByteWriter
 {
 public:
     ByteBuffer(std::vector<uint8_t> *bytes);

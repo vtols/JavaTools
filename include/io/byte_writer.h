@@ -1,13 +1,13 @@
-#ifndef BYTE_STREAM_WRITER_H
-#define BYTE_STREAM_WRITER_H
+#ifndef BYTE_WRITER_H
+#define BYTE_WRITER_H
 
 #include <cstddef>
 #include <cstdint>
 
-class ByteStreamWriter
+class ByteWriter
 {
 public:
-    virtual ~ByteStreamWriter() = 0;
+    virtual ~ByteWriter() = 0;
 
     virtual void write(uint8_t *buffer, size_t count) = 0;
     void write(uint8_t buffer);
@@ -16,4 +16,4 @@ public:
     virtual void close() = 0;
 };
 
-#endif /* BYTE_STREAM_WRITER_H */
+#endif /* BYTE_WRITER_H */

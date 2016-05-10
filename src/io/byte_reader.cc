@@ -1,10 +1,10 @@
-#include <io/byte_stream.h>
+#include <io/byte_reader.h>
 
-ByteStream::~ByteStream()
+ByteReader::~ByteReader()
 {
 }
 
-uint8_t ByteStream::read8()
+uint8_t ByteReader::read8()
 {
     uint8_t buffer[1];
 
@@ -12,7 +12,7 @@ uint8_t ByteStream::read8()
     return buffer[0];
 }
 
-uint16_t ByteStream::read16()
+uint16_t ByteReader::read16()
 {
     uint8_t buffer[2];
 
@@ -21,7 +21,7 @@ uint16_t ByteStream::read16()
            (uint16_t) buffer[1];
 }
 
-uint32_t ByteStream::read32()
+uint32_t ByteReader::read32()
 {
     uint8_t buffer[4];
 

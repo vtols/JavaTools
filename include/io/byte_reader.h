@@ -1,13 +1,13 @@
-#ifndef BYTE_STREAM_H
-#define BYTE_STREAM_H
+#ifndef BYTE_READER_H
+#define BYTE_READER_H
 
 #include <cstddef>
 #include <cstdint>
 
-class ByteStream
+class ByteReader
 {
 public:
-    virtual ~ByteStream() = 0;
+    virtual ~ByteReader() = 0;
     
     virtual void read(uint8_t *buffer, size_t count) = 0;
     virtual uint8_t read8();
@@ -16,4 +16,4 @@ public:
     //virtual bool eof();
 };
 
-#endif /* BYTE_STREAM_H */
+#endif /* BYTE_READER_H */

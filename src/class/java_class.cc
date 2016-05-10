@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include <io/byte_stream_writer.h>
+#include <io/byte_writer.h>
 #include <class/java_class.h>
 
-ClassFile ClassFile::read(ByteStream *bs)
+ClassFile ClassFile::read(ByteReader *bs)
 {
     ClassFile cf;
 
@@ -43,7 +43,7 @@ ClassFile ClassFile::read(ByteStream *bs)
     return cf;
 }
 
-void ClassFile::write(ByteStreamWriter* bs)
+void ClassFile::write(ByteWriter* bs)
 {
     bs->write(magic);
 
@@ -85,7 +85,7 @@ std::string ClassFile::getUtf8(uint16_t index)
     return "";
 }
 
-ConstantPoolInfo *ConstantPoolInfo::read(ByteStream *bs)
+ConstantPoolInfo *ConstantPoolInfo::read(ByteReader *bs)
 {
     ConstantPoolInfo *ci = nullptr;
     uint8_t tag = bs->read8();
@@ -115,12 +115,12 @@ ConstantPoolInfo *ConstantPoolInfo::read(ByteStream *bs)
     return ci;
 }
 
-void ConstantPoolInfo::write(ByteStreamWriter *bs)
+void ConstantPoolInfo::write(ByteWriter *bs)
 {
     bs->write(tag);
 }
 
-RefInfo *RefInfo::read(ByteStream *bs)
+RefInfo *RefInfo::read(ByteReader *bs)
 {
     RefInfo *mi = new RefInfo;
 
@@ -129,14 +129,14 @@ RefInfo *RefInfo::read(ByteStream *bs)
     return mi;
 }
 
-void RefInfo::write(ByteStreamWriter *bs)
+void RefInfo::write(ByteWriter *bs)
 {
     ConstantPoolInfo::write(bs);
     bs->write(firstIndex);
     bs->write(secondIndex);
 }
 
-IndexInfo *IndexInfo::read(ByteStream *bs)
+IndexInfo *IndexInfo::read(ByteReader *bs)
 {
     IndexInfo *ri = new IndexInfo;
 
@@ -144,13 +144,13 @@ IndexInfo *IndexInfo::read(ByteStream *bs)
     return ri;
 }
 
-void Const32Info::write(ByteStreamWriter *bs)
+void Const32Info::write(ByteWriter *bs)
 {
     ConstantPoolInfo::write(bs);
     bs->write(value);
 }
 
-Const32Info *Const32Info::read(ByteStream *bs)
+Const32Info *Const32Info::read(ByteReader *bs)
 {
     Const32Info *ri = new Const32Info;
 
@@ -158,13 +158,13 @@ Const32Info *Const32Info::read(ByteStream *bs)
     return ri;
 }
 
-void IndexInfo::write(ByteStreamWriter *bs)
+void IndexInfo::write(ByteWriter *bs)
 {
     ConstantPoolInfo::write(bs);
     bs->write(index);
 }
 
-Utf8Info *Utf8Info::read(ByteStream *bs)
+Utf8Info *Utf8Info::read(ByteReader *bs)
 {
     Utf8Info *utf8 = new Utf8Info;
 
@@ -176,14 +176,14 @@ Utf8Info *Utf8Info::read(ByteStream *bs)
     return utf8;
 }
 
-void Utf8Info::write(ByteStreamWriter *bs)
+void Utf8Info::write(ByteWriter *bs)
 {
     ConstantPoolInfo::write(bs);
     bs->write((uint16_t) str.length());
     bs->write((uint8_t *) str.c_str(), str.length());
 }
 
-MemberInfo *MemberInfo::read(ByteStream *bs, ClassFile *cf)
+MemberInfo *MemberInfo::read(ByteReader *bs, ClassFile *cf)
 {
     MemberInfo *mi = new MemberInfo;
 
@@ -197,7 +197,7 @@ MemberInfo *MemberInfo::read(ByteStream *bs, ClassFile *cf)
     return mi;
 }
 
-void MemberInfo::write(ByteStreamWriter *bs)
+void MemberInfo::write(ByteWriter *bs)
 {
     bs->write(accessFlags);
     bs->write(nameIndex);
@@ -208,7 +208,7 @@ void MemberInfo::write(ByteStreamWriter *bs)
         attributes[i]->write(bs);
 }
 
-AttributeInfo *AttributeInfo::read(ByteStream *bs, ClassFile *cf)
+AttributeInfo *AttributeInfo::read(ByteReader *bs, ClassFile *cf)
 {
     AttributeInfo *attr = new AttributeInfo;
 
@@ -231,13 +231,13 @@ AttributeInfo *AttributeInfo::read(ByteStream *bs, ClassFile *cf)
     return attr;
 }
 
-void AttributeInfo::write(ByteStreamWriter *bs)
+void AttributeInfo::write(ByteWriter *bs)
 {
     bs->write(nameIndex);
     bs->write(length);
 }
 
-CodeAttribute *CodeAttribute::read(ByteStream *bs, ClassFile *cf)
+CodeAttribute *CodeAttribute::read(ByteReader *bs, ClassFile *cf)
 {
     CodeAttribute *attr = new CodeAttribute;
 
@@ -260,7 +260,7 @@ CodeAttribute *CodeAttribute::read(ByteStream *bs, ClassFile *cf)
     return attr;
 }
 
-void CodeAttribute::write(ByteStreamWriter *bs)
+void CodeAttribute::write(ByteWriter *bs)
 {
     AttributeInfo::write(bs);
 
@@ -279,7 +279,7 @@ void CodeAttribute::write(ByteStreamWriter *bs)
         attributes[i]->write(bs);
 }
 
-Exception Exception::read(ByteStream *bs)
+Exception Exception::read(ByteReader *bs)
 {
     Exception ex;
 
@@ -290,7 +290,7 @@ Exception Exception::read(ByteStream *bs)
     return ex;
 }
 
-void Exception::write(ByteStreamWriter *bs)
+void Exception::write(ByteWriter *bs)
 {
     bs->write(startPc);
     bs->write(endPc);
@@ -298,7 +298,7 @@ void Exception::write(ByteStreamWriter *bs)
     bs->write(catchType);
 }
 
-LineNumberTableAttribute *LineNumberTableAttribute::read(ByteStream *bs)
+LineNumberTableAttribute *LineNumberTableAttribute::read(ByteReader *bs)
 {
     LineNumberTableAttribute *attr = new LineNumberTableAttribute;
 
@@ -309,7 +309,7 @@ LineNumberTableAttribute *LineNumberTableAttribute::read(ByteStream *bs)
     return attr;
 }
 
-void LineNumberTableAttribute::write(ByteStreamWriter *bs)
+void LineNumberTableAttribute::write(ByteWriter *bs)
 {
     AttributeInfo::write(bs);
 
@@ -318,7 +318,7 @@ void LineNumberTableAttribute::write(ByteStreamWriter *bs)
         lineNumberTable[i].write(bs);
 }
 
-LineNumber LineNumber::read(ByteStream *bs)
+LineNumber LineNumber::read(ByteReader *bs)
 {
     LineNumber ln;
 
@@ -327,13 +327,13 @@ LineNumber LineNumber::read(ByteStream *bs)
     return ln;
 }
 
-void LineNumber::write(ByteStreamWriter *bs)
+void LineNumber::write(ByteWriter *bs)
 {
     bs->write(startPc);
     bs->write(lineNumber);
 }
 
-StackMapTableAttribute *StackMapTableAttribute::read(ByteStream *bs)
+StackMapTableAttribute *StackMapTableAttribute::read(ByteReader *bs)
 {
     StackMapTableAttribute *attr = new StackMapTableAttribute;
 
@@ -343,7 +343,7 @@ StackMapTableAttribute *StackMapTableAttribute::read(ByteStream *bs)
     return attr;
 };
 
-void StackMapTableAttribute::write(ByteStreamWriter *bs)
+void StackMapTableAttribute::write(ByteWriter *bs)
 {
     AttributeInfo::write(bs);
 
@@ -352,7 +352,7 @@ void StackMapTableAttribute::write(ByteStreamWriter *bs)
         entries[i]->write(bs);
 }
 
-StackMapFrame *StackMapFrame::read(ByteStream *bs)
+StackMapFrame *StackMapFrame::read(ByteReader *bs)
 {
     StackMapFrame *frame = new StackMapFrame;
 
@@ -375,7 +375,7 @@ StackMapFrame *StackMapFrame::read(ByteStream *bs)
     return frame;
 }
 
-void StackMapFrame::write(ByteStreamWriter *bs)
+void StackMapFrame::write(ByteWriter *bs)
 {
     bs->write(frameType);
 
@@ -392,7 +392,7 @@ void StackMapFrame::write(ByteStreamWriter *bs)
     }
 }
 
-SourceFileAttribute *SourceFileAttribute::read(ByteStream *bs)
+SourceFileAttribute *SourceFileAttribute::read(ByteReader *bs)
 {
     SourceFileAttribute *src = new SourceFileAttribute;
 
@@ -400,14 +400,14 @@ SourceFileAttribute *SourceFileAttribute::read(ByteStream *bs)
     return src;
 }
 
-void SourceFileAttribute::write(ByteStreamWriter *bs)
+void SourceFileAttribute::write(ByteWriter *bs)
 {
     AttributeInfo::write(bs);
 
     bs->write(sourceFileIndex);
 }
 
-VerificationTypeInfo VerificationTypeInfo::read(ByteStream *bs)
+VerificationTypeInfo VerificationTypeInfo::read(ByteReader *bs)
 {
     VerificationTypeInfo ver;
 
@@ -419,7 +419,7 @@ VerificationTypeInfo VerificationTypeInfo::read(ByteStream *bs)
     return ver;
 }
 
-void VerificationTypeInfo::write(ByteStreamWriter *bs)
+void VerificationTypeInfo::write(ByteWriter *bs)
 {
     bs->write(tag);
     if (tag == ITEM_Object ||

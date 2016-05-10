@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include <io/file_byte_stream.h>
-#include <io/file_byte_stream_writer.h>
+#include <io/file_byte_reader.h>
+#include <io/file_byte_writer.h>
 
 #include <class/java_class.h>
 #include <class/java_class_builder.h>
@@ -10,7 +10,7 @@ int main()
 {
     std::locale::global(std::locale(""));
 
-    FileByteStream *f = new FileByteStream("Sample.class");
+    FileByteReader *f = new FileByteReader("Sample.class");
     ClassFile c = ClassFile::read(f);
     std::cout << std::hex << "0x" << std::uppercase << c.magic
             << std::dec << std::endl;
@@ -62,13 +62,13 @@ int main()
 
     delete f;
 
-    FileByteStreamWriter *w;
+    FileByteWriter *w;
 
-    w = new FileByteStreamWriter("Sample.class");
+    w = new FileByteWriter("Sample.class");
     c.write(w);
     delete w;
 
-    w = new FileByteStreamWriter("Gen.class");
+    w = new FileByteWriter("Gen.class");
     ClassBuilder cb("Gen");
 
     MethodBuilder *mb = cb.createMethod("main");

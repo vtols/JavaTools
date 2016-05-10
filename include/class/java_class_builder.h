@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 
-#include <io/byte_stream_writer.h>
+#include <io/byte_writer.h>
 #include <io/byte_buffer.h>
 #include <class/java_class.h>
 #include <class/java_opcodes.h>
@@ -95,7 +95,7 @@ private:
     /* Now assume that all jump addresses are less than 2^16 */
     std::vector<uint8_t> code;
     ByteBuffer *codeBuilder;
-    ByteStreamWriter *codeWriter;
+    ByteWriter *codeWriter;
     std::vector<Label*> labels;
     std::vector<Frame*> frames;
 

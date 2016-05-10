@@ -3,7 +3,7 @@
 #include <cwchar>
 
 #include <io/file_stream.h>
-#include <io/file_byte_stream_writer.h>
+#include <io/file_byte_writer.h>
 #include <parser/java_lexer.h>
 #include <parser/java_parser.h>
 #include <gen/java_gen.h>
@@ -21,7 +21,7 @@ int main()
     ClassGenerator gen(src);
     ClassFile *classFile = gen.generate();
 
-    FileByteStreamWriter w("Sample.class");
+    FileByteWriter w("Sample.class");
     classFile->write(&w);
 
     return 0;

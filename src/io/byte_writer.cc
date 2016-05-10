@@ -1,15 +1,15 @@
-#include <io/byte_stream_writer.h>
+#include <io/byte_writer.h>
 
-ByteStreamWriter::~ByteStreamWriter()
+ByteWriter::~ByteWriter()
 {
 }
 
-void ByteStreamWriter::write(uint8_t buffer)
+void ByteWriter::write(uint8_t buffer)
 {
     this->write(&buffer, 1);
 }
 
-void ByteStreamWriter::write(uint16_t buffer)
+void ByteWriter::write(uint16_t buffer)
 {
     uint8_t *buffer_ptr = (uint8_t *) &buffer;
     
@@ -17,7 +17,7 @@ void ByteStreamWriter::write(uint16_t buffer)
     this->write(&buffer_ptr[0], 1);
 }
 
-void ByteStreamWriter::write(uint32_t buffer)
+void ByteWriter::write(uint32_t buffer)
 {
     uint8_t *buffer_ptr = (uint8_t *) &buffer;
     

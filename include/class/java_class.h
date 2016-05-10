@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 
-#include <io/byte_stream.h>
-#include <io/byte_stream_writer.h>
+#include <io/byte_reader.h>
+#include <io/byte_writer.h>
 
 struct ConstantPoolInfo;
 struct ClassFile;
@@ -99,8 +99,8 @@ struct ClassFile
     uint16_t attributesCount;
     std::vector<AttributeInfo*> attributes;
 
-    static ClassFile read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static ClassFile read(ByteReader *bs);
+    void write(ByteWriter *bs);
     std::string getUtf8(uint16_t index);
 };
 
@@ -108,40 +108,40 @@ struct ConstantPoolInfo
 {
     uint8_t tag;
 
-    static ConstantPoolInfo *read(ByteStream *bs);
-    virtual void write(ByteStreamWriter *bs);
+    static ConstantPoolInfo *read(ByteReader *bs);
+    virtual void write(ByteWriter *bs);
 };
 
 struct RefInfo : ConstantPoolInfo
 {
     uint16_t firstIndex, secondIndex;
 
-    static RefInfo *read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static RefInfo *read(ByteReader *bs);
+    void write(ByteWriter *bs);
 };
 
 struct IndexInfo : ConstantPoolInfo
 {
     uint16_t index;
 
-    static IndexInfo *read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static IndexInfo *read(ByteReader *bs);
+    void write(ByteWriter *bs);
 };
 
 struct Const32Info : ConstantPoolInfo
 {
     uint32_t value;
 
-    static Const32Info *read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static Const32Info *read(ByteReader *bs);
+    void write(ByteWriter *bs);
 };
 
 struct Utf8Info : ConstantPoolInfo
 {
     std::string str;
 
-    static Utf8Info *read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static Utf8Info *read(ByteReader *bs);
+    void write(ByteWriter *bs);
 };
 
 struct MemberInfo
@@ -153,8 +153,8 @@ struct MemberInfo
     uint16_t attributesCount;
     std::vector<AttributeInfo*> attributes;
 
-    static MemberInfo *read(ByteStream *bs, ClassFile *cf);
-    void write(ByteStreamWriter *bs);
+    static MemberInfo *read(ByteReader *bs, ClassFile *cf);
+    void write(ByteWriter *bs);
 };
 
 struct AttributeInfo
@@ -162,8 +162,8 @@ struct AttributeInfo
     uint16_t nameIndex;
     uint32_t length;
 
-    static AttributeInfo *read(ByteStream *bs, ClassFile *cf);
-    virtual void write(ByteStreamWriter *bs);
+    static AttributeInfo *read(ByteReader *bs, ClassFile *cf);
+    virtual void write(ByteWriter *bs);
 };
 
 struct Exception
@@ -173,8 +173,8 @@ struct Exception
     uint16_t handlerPc;
     uint16_t catchType;
     
-    static Exception read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static Exception read(ByteReader *bs);
+    void write(ByteWriter *bs);
 };
 
 struct CodeAttribute : AttributeInfo
@@ -191,8 +191,8 @@ struct CodeAttribute : AttributeInfo
     uint16_t attributesCount;
     std::vector<AttributeInfo*> attributes;
 
-    static CodeAttribute *read(ByteStream *bs, ClassFile *cf);
-    void write(ByteStreamWriter *bs);
+    static CodeAttribute *read(ByteReader *bs, ClassFile *cf);
+    void write(ByteWriter *bs);
 };
 
 struct LineNumber
@@ -200,8 +200,8 @@ struct LineNumber
     uint16_t startPc;
     uint16_t lineNumber;
 
-    static LineNumber read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static LineNumber read(ByteReader *bs);
+    void write(ByteWriter *bs);
 };
 
 struct LineNumberTableAttribute : AttributeInfo
@@ -209,8 +209,8 @@ struct LineNumberTableAttribute : AttributeInfo
     uint16_t lineNumberTableLength;
     std::vector<LineNumber> lineNumberTable;
 
-    static LineNumberTableAttribute *read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static LineNumberTableAttribute *read(ByteReader *bs);
+    void write(ByteWriter *bs);
 };
 
 struct VerificationTypeInfo
@@ -218,8 +218,8 @@ struct VerificationTypeInfo
     uint8_t tag;
     uint16_t data;
 
-    static VerificationTypeInfo read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static VerificationTypeInfo read(ByteReader *bs);
+    void write(ByteWriter *bs);
 };
 
 struct StackMapFrame
@@ -234,8 +234,8 @@ struct StackMapFrame
     uint16_t numberStack;
     std::vector<VerificationTypeInfo> stack;
 
-    static StackMapFrame *read(ByteStream *bs);
-    virtual void write(ByteStreamWriter *bs);
+    static StackMapFrame *read(ByteReader *bs);
+    virtual void write(ByteWriter *bs);
 };
 
 struct StackMapTableAttribute : AttributeInfo
@@ -243,16 +243,16 @@ struct StackMapTableAttribute : AttributeInfo
     uint16_t numberOfEntries;
     std::vector<StackMapFrame*> entries;
 
-    static StackMapTableAttribute *read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static StackMapTableAttribute *read(ByteReader *bs);
+    void write(ByteWriter *bs);
 };
 
 struct SourceFileAttribute : AttributeInfo
 {
     uint16_t sourceFileIndex;
 
-    static SourceFileAttribute *read(ByteStream *bs);
-    void write(ByteStreamWriter *bs);
+    static SourceFileAttribute *read(ByteReader *bs);
+    void write(ByteWriter *bs);
 };
 
 #endif /* JAVA_CLASS_H */
