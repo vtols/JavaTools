@@ -3,22 +3,38 @@
 
 #include <class/java_class.h>
 
+class ClassLoader;
 struct Class;
 struct Method;
 struct Frame;
 class Interpreter;
 class Thread;
 
+class ClassLoader
+{
+public:
+    /* Now load only from current dir */
+    static Class *loadClass(std::string path);
+
+private:
+    static Class *loadClass(ByteReader *br);
+    static Class *loadClass(ClassFile *cf);
+};
+
 struct Class
 {
     ClassFile *classFile;
 
-    Class(ClassFile *classFile);
-    /* Doesn't take in account method signature */
-    Method *getMethod(std::string name);
+    Class *super;
 
-    static Class *loadClass(ByteReader *br);
-    static Class *loadClass(ClassFile *cf);
+    Class(ClassFile *classFile);
+    Method *getMethod(std::string name, std::string descriptor);
+};
+
+struct Object
+{
+    Class *cls;
+    void *data;
 };
 
 struct Method
@@ -36,33 +52,37 @@ struct Frame
 {
     Frame *prev;
     Method *owner;
+    /* PC will be used later */
     uint32_t pc;
     uint32_t *stack, *locals;
     uint16_t stackTop, maxLocals;
     uint8_t *code;
+
+    void debug();
+};
+
+struct Stack
+{
+    Frame *top = nullptr;
+
+    void pushMethod(Method *m);
+    void pushFrame(Frame *f);
+    void popFrame();
+    Frame *newFrame(Method *m);
 };
 
 class Interpreter
 {
 public:
-    Frame *current;
+    Stack frameStack;
 
     void run();
-    Frame *newFrame(Method *m);
-    void pushFrame(Frame *f);
-    void popFrame();
-    void debugFrame();
 };
 
 class Thread
 {
 public:
-    /* Now actually doesn't create new thread */
-    /* And doesn't pass any arguments to method */
-    void runThread(Method *m);
-
-private:
-    Frame *current;
+    void invoke(Method *m);
 };
 
 #endif /* JVM_H */

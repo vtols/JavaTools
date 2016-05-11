@@ -52,11 +52,13 @@ void ClassGenerator::generateMethod()
     }
     generateBlock(methodContext->body);
 
+    /*
     mb->field(opcodes::GETSTATIC,
             "java/lang/System", "out", "Ljava/io/PrintStream;");
     mb->local(opcodes::ILOAD, 1);
     mb->invoke(opcodes::INVOKEVIRTUAL,
             "java/io/PrintStream", "println", "(I)V");
+    */
     mb->instruction(opcodes::RETURN);
 
     /* Must generate maxLocals */

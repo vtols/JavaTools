@@ -1,32 +1,47 @@
 #include <jvm/jvm.h>
 #include <class/java_opcodes.h>
+#include <io/file_byte_reader.h>
 #include <iostream>
 
-Class::Class(ClassFile *classFile) :
-    classFile(classFile) {}
-
-Method *Class::getMethod(std::string name)
+Class *ClassLoader::loadClass(std::string path)
 {
-    for (MemberInfo* methodMember : classFile->methods) {
-        uint16_t nameIndex = methodMember->nameIndex;
-        std::string methodName = classFile->getUtf8(nameIndex);
-        if (name == methodName) {
-            return new Method(this, methodMember);
-        }
-    }
-    return nullptr;
+    FileByteReader fr(path + ".class");
+
+    return loadClass(&fr);
 }
 
-Class *Class::loadClass(ClassFile *cf)
+Class *ClassLoader::loadClass(ClassFile *cf)
 {
     return new Class(cf);
 }
 
-Class *Class::loadClass(ByteReader *br)
+Class *ClassLoader::loadClass(ByteReader *br)
 {
     ClassFile *cf = new ClassFile;
     *cf = ClassFile::read(br);
-    return Class::loadClass(cf);
+    return ClassLoader::loadClass(cf);
+}
+
+Class::Class(ClassFile *classFile) :
+    classFile(classFile) {}
+
+Method *Class::getMethod(std::string name, std::string descriptor)
+{
+    for (MemberInfo* methodMember : classFile->methods) {
+        uint16_t nameIndex = methodMember->nameIndex;
+        uint16_t descriptorIndex = methodMember->descriptorIndex;
+
+        std::string methodName = classFile->getUtf8(nameIndex);
+        std::string methodDescriptor =
+                classFile->getUtf8(descriptorIndex);
+
+
+        if (name == methodName &&
+                descriptor == methodDescriptor) {
+            return new Method(this, methodMember);
+        }
+    }
+    return nullptr;
 }
 
 Method::Method(Class *owner, MemberInfo *info) :
@@ -49,15 +64,21 @@ Method::Method(Class *owner, MemberInfo *info) :
     code = codeAttr->code;
 }
 
-void Thread::runThread(Method *m)
+void Thread::invoke(Method *m)
 {
     Interpreter runInterpeter;
-    Frame *startFrame = runInterpeter.newFrame(m);
-    runInterpeter.pushFrame(startFrame);
+    Frame *startFrame = runInterpeter.frameStack.newFrame(m);
+    runInterpeter.frameStack.pushFrame(startFrame);
     runInterpeter.run();
 }
 
-Frame *Interpreter::newFrame(Method *m)
+void Stack::pushMethod(Method *m)
+{
+    Frame *startFrame = newFrame(m);
+    pushFrame(startFrame);
+}
+
+Frame *Stack::newFrame(Method *m)
 {
     Frame *f = new Frame;
     f->owner = m;
@@ -71,27 +92,29 @@ Frame *Interpreter::newFrame(Method *m)
     return f;
 }
 
-void Interpreter::popFrame()
+void Stack::popFrame()
 {
-    Frame *f = current->prev;
-    delete current->stack;
-    delete current->locals;
-    delete current;
-    current = f;
+    Frame *f = top->prev;
+    delete top->stack;
+    delete top->locals;
+    delete top;
+    top = f;
 }
 
-void Interpreter::pushFrame(Frame *f)
+void Stack::pushFrame(Frame *f)
 {
-    current = f;
+    f->prev = top;
+    top = f;
 }
 
 void Interpreter::run()
 {
-    uint32_t pc = current->pc;
-    uint8_t *code = current->code;
-    uint32_t *locals = current->locals;
-    uint32_t *stack = current->stack;
-    uint16_t stackTop = current->stackTop;
+    Frame *top = frameStack.top;
+    uint32_t pc = top->pc;
+    uint8_t *code = top->code;
+    uint32_t *locals = top->locals;
+    uint32_t *stack = top->stack;
+    uint16_t stackTop = top->stackTop;
     while (true) {
         switch (code[pc]) {
         case opcodes::BIPUSH:
@@ -132,31 +155,30 @@ void Interpreter::run()
                     stack[stackTop - 2] + stack[stackTop - 1];
             stackTop--;
             pc++;
+            break;
         case opcodes::IMUL:
             stack[stackTop - 2] =
                     stack[stackTop - 2] * stack[stackTop - 1];
             stackTop--;
             pc++;
+            break;
         case opcodes::RETURN:
-            debugFrame();
-            popFrame();
+            frameStack.popFrame();
             return;
         default:
             break;
         }
-        current->pc = pc;
+        frameStack.top->debug();
     }
 }
 
-void Interpreter::debugFrame()
+void Frame::debug()
 {
     std::cout << "Locals:\t\n[";
-    for (int i = 0; i < current->maxLocals; i++) {
+    for (int i = 0; i < maxLocals; i++) {
         if (i > 0)
             std::cout << ", ";
-        std::cout << current->locals[i];
+        std::cout << locals[i];
     }
     std::cout << "]\n";
 }
-
-

@@ -4,13 +4,12 @@
 
 int main()
 {
-    FileByteReader f("Sample.class");
-
-    Class *cls = Class::loadClass(&f);
-    Method *mainMethod = cls->getMethod("main");
+    Class *cls = ClassLoader::loadClass("Sample");
+    Method *mainMethod =
+            cls->getMethod("main", "([Ljava/lang/String;)V");
 
     Thread th;
-    th.runThread(mainMethod);
+    th.invoke(mainMethod);
 
     return 0;
 }
