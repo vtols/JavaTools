@@ -25,6 +25,18 @@ Class *ClassLoader::loadClass(ByteReader *br)
 Class::Class(ClassFile *classFile) :
     classFile(classFile) {}
 
+Class *ClassCache::getClass(std::string path)
+{
+    auto findIterator = classMap.find(path);
+    if (findIterator != classMap.end())
+        return (*findIterator).second;
+
+    Class *loadedClass = ClassLoader::loadClass(path);
+    classMap[path] = loadedClass;
+
+    return loadedClass;
+}
+
 Method *Class::getMethod(std::string name, std::string descriptor)
 {
     for (MemberInfo* methodMember : classFile->methods) {

@@ -1,6 +1,8 @@
 #ifndef JVM_H
 #define JVM_H
 
+#include <map>
+
 #include <class/java_class.h>
 
 class ClassLoader;
@@ -29,6 +31,16 @@ struct Class
 
     Class(ClassFile *classFile);
     Method *getMethod(std::string name, std::string descriptor);
+};
+
+class ClassCache
+{
+public:
+    Class *getClass(std::string path);
+
+private:
+    /* Mapping from class name to class itself */
+    std::map<std::string, Class*> classMap;
 };
 
 struct Object
