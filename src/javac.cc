@@ -8,11 +8,14 @@
 #include <parser/java_parser.h>
 #include <gen/java_gen.h>
 
-int main()
+int main(int argc, char *argv[])
 {
     std::locale::global(std::locale(""));
+
+    std::string sourcePath = argv[1];
+    size_t found = sourcePath.find_last_of('.');
     
-    FileStream f("Sample.java");
+    FileStream f(sourcePath);
     JavaLexer l(&f);
     JavaParser p = JavaParser(&l);
 
@@ -21,7 +24,7 @@ int main()
     ClassGenerator gen(src);
     ClassFile *classFile = gen.generate();
 
-    FileByteWriter w("Sample.class");
+    FileByteWriter w(sourcePath.substr(0, found) + ".class");
     classFile->write(&w);
 
     return 0;
