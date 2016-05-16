@@ -9,8 +9,7 @@ int main(int argc, char *argv[])
     size_t found = classPath.find_last_of('.');
     std::string className = classPath.substr(0, found);
 
-    ClassCache c;
-    Class *cls = c.getClass("Sample");
+    Class *cls = ClassCache::getClass("Sample");
     Method *mainMethod =
             cls->getMethod("main", "([Ljava/lang/String;)V");
 
