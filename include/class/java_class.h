@@ -102,6 +102,7 @@ struct ClassFile
     static ClassFile read(ByteReader *bs);
     void write(ByteWriter *bs);
     std::string getUtf8(uint16_t index);
+    std::string getIndexName(uint16_t index);
 };
 
 struct ConstantPoolInfo

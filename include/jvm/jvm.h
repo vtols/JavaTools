@@ -7,10 +7,24 @@
 
 class ClassLoader;
 struct Class;
+class ClassCache;
+struct Object;
 struct Method;
 struct Frame;
 class Interpreter;
 class Thread;
+
+const int
+    BYTE_SIZE    = 1,
+    CHAR_SIZE    = 2,
+    DOUBLE_SIZE  = 8,
+    FLOAT_SIZE   = 4,
+    INTEGER_SIZE = 4,
+    LONG_SIZE    = 8,
+    OBJECT_SIZE  = sizeof(uintptr_t),
+    SHORT_SIZE   = 2,
+    BOOLEAN_SIZE = 1,
+    ARRAY_SIZE   = sizeof(uintptr_t);
 
 class ClassLoader
 {
@@ -29,24 +43,34 @@ struct Class
 
     Class *super;
 
+    uint16_t staticFieldsLength, fieldsLength;
+    std::map<std::string, uint16_t> fieldOffset;
+    uint8_t *staticFields;
+
+    std::map<std::string, Method*> methods;
+
     Class(ClassFile *classFile);
+    static uint8_t fieldSize(std::string descriptor);
+    Object *newObject();
     Method *getMethod(std::string name, std::string descriptor);
 };
 
 class ClassCache
 {
 public:
-    Class *getClass(std::string path);
+    static Class *getClass(std::string path);
 
 private:
     /* Mapping from class name to class itself */
-    std::map<std::string, Class*> classMap;
+    static std::map<std::string, Class*> classMap;
 };
 
 struct Object
 {
     Class *cls;
-    void *data;
+    uint8_t *fields;
+
+    Object(Class *cls);
 };
 
 struct Method

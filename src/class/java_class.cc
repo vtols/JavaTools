@@ -82,6 +82,21 @@ std::string ClassFile::getUtf8(uint16_t index)
     return "";
 }
 
+std::string ClassFile::getIndexName(uint16_t index)
+{
+    ConstantPoolInfo *constInfo = constantPool[index - 1];
+    uint8_t tag = constInfo->tag;
+
+    if (tag == CONSTANT_Methodref ||
+            tag == CONSTANT_Methodref ||
+            tag == CONSTANT_Class) {
+        IndexInfo *indexInfo = static_cast<IndexInfo *>(constInfo);
+        return getUtf8(indexInfo->index);
+    }
+
+    return "";
+}
+
 ConstantPoolInfo *ConstantPoolInfo::read(ByteReader *bs)
 {
     ConstantPoolInfo *ci = nullptr;

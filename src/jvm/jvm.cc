@@ -23,7 +23,109 @@ Class *ClassLoader::loadClass(ByteReader *br)
 }
 
 Class::Class(ClassFile *classFile) :
-    classFile(classFile) {}
+    classFile(classFile)
+{
+    uint16_t superIndex = classFile->superClass;
+    if (superIndex != 0) {
+        std::string superPath = classFile->getIndexName(superIndex);
+        super = ClassCache::getClass(superPath);
+    }
+
+    uint16_t totalFieldsCount = classFile->fields.size();
+    uint16_t staticFieldsCount = 0, fieldsCount = 0;
+    for (size_t i = 0; i < totalFieldsCount; i++) {
+        MemberInfo *fieldInfo = classFile->fields[i];
+        std::string fieldName = classFile->getUtf8(fieldInfo->nameIndex),
+                fieldDescriptor = classFile->getUtf8(fieldInfo->descriptorIndex);
+        if (fieldInfo->accessFlags & ACC_STATIC) {
+            fieldOffset[fieldName] = staticFieldsLength;
+            staticFieldsLength += fieldSize(fieldDescriptor);
+            staticFieldsCount++;
+        } else {
+            fieldOffset[fieldName] = fieldsLength;
+            fieldsLength += fieldSize(fieldDescriptor);
+            fieldsCount++;
+        }
+    }
+
+    /* Zero-initialization of fields */
+    staticFields = new uint8_t[staticFieldsLength]();
+
+    Method *classInit = nullptr;
+
+    for (MemberInfo* methodMember : classFile->methods) {
+        uint16_t nameIndex = methodMember->nameIndex;
+        uint16_t descriptorIndex = methodMember->descriptorIndex;
+
+        std::string methodName = classFile->getUtf8(nameIndex);
+        std::string methodDescriptor =
+                classFile->getUtf8(descriptorIndex);
+        std::string combined = methodName + ':' + methodDescriptor;
+        Method *method = new Method(this, methodMember);
+
+        methods[combined] = method;
+
+        if (classInit == nullptr && combined == "<clinit>:V()")
+            classInit = method;
+    }
+
+    if (classInit != nullptr) {
+        Thread initThread;
+        initThread.invoke(classInit);
+    }
+}
+
+Object *Class::newObject()
+{
+    return new Object(this);
+}
+
+Object::Object(Class *cls) :
+    cls(cls)
+{
+    fields = new uint8_t[cls->fieldsLength]();
+}
+
+uint8_t Class::fieldSize(std::string descriptor)
+{
+    switch (descriptor[0]) {
+        case 'B':
+            return BYTE_SIZE;
+        case 'C':
+            return CHAR_SIZE;
+        case 'D':
+            return DOUBLE_SIZE;
+        case 'F':
+            return FLOAT_SIZE;
+        case 'I':
+            return INTEGER_SIZE;
+        case 'J':
+            return LONG_SIZE;
+        case 'L':
+            return OBJECT_SIZE;
+        case 'S':
+            return SHORT_SIZE;
+        case 'Z':
+            return BOOLEAN_SIZE;
+        case '[':
+            return ARRAY_SIZE;
+        default:
+            return 0;
+    }
+}
+
+Method *Class::getMethod(std::string name, std::string descriptor)
+{
+    std::string combined = name + ':' + descriptor;
+
+    auto findIterator = methods.find(combined);
+    if (findIterator != methods.end())
+        return (*findIterator).second;
+
+    return nullptr;
+}
+
+std::map<std::string, Class*> ClassCache::classMap;
 
 Class *ClassCache::getClass(std::string path)
 {
@@ -35,25 +137,6 @@ Class *ClassCache::getClass(std::string path)
     classMap[path] = loadedClass;
 
     return loadedClass;
-}
-
-Method *Class::getMethod(std::string name, std::string descriptor)
-{
-    for (MemberInfo* methodMember : classFile->methods) {
-        uint16_t nameIndex = methodMember->nameIndex;
-        uint16_t descriptorIndex = methodMember->descriptorIndex;
-
-        std::string methodName = classFile->getUtf8(nameIndex);
-        std::string methodDescriptor =
-                classFile->getUtf8(descriptorIndex);
-
-
-        if (name == methodName &&
-                descriptor == methodDescriptor) {
-            return new Method(this, methodMember);
-        }
-    }
-    return nullptr;
 }
 
 Method::Method(Class *owner, MemberInfo *info) :
@@ -97,8 +180,8 @@ Frame *Stack::newFrame(Method *m)
     f->pc = 0;
     f->stackTop = 0;
     f->maxLocals = m->codeAttr->maxLocals;
-    f->stack = new uint32_t[m->codeAttr->maxStack];
-    f->locals = new uint32_t[m->codeAttr->maxLocals];
+    f->stack = new uint32_t[m->codeAttr->maxStack]();
+    f->locals = new uint32_t[m->codeAttr->maxLocals]();
     f->code = m->code;
 
     return f;
