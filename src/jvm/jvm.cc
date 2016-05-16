@@ -51,7 +51,7 @@ Class::Class(ClassFile *classFile) :
     /* Zero-initialization of fields */
     staticFields = new uint8_t[staticFieldsLength]();
 
-    Method *classInit = nullptr;
+    classInit = nullptr;
 
     for (MemberInfo* methodMember : classFile->methods) {
         uint16_t nameIndex = methodMember->nameIndex;
@@ -65,10 +65,13 @@ Class::Class(ClassFile *classFile) :
 
         methods[combined] = method;
 
-        if (classInit == nullptr && combined == "<clinit>:V()")
+        if (classInit == nullptr && combined == "<clinit>:()V")
             classInit = method;
     }
+}
 
+void Class::init()
+{
     if (classInit != nullptr) {
         Thread initThread;
         initThread.invoke(classInit);
@@ -135,6 +138,7 @@ Class *ClassCache::getClass(std::string path)
 
     Class *loadedClass = ClassLoader::loadClass(path);
     classMap[path] = loadedClass;
+    loadedClass->init();
 
     return loadedClass;
 }
@@ -182,6 +186,13 @@ Frame *Stack::newFrame(Method *m)
     f->maxLocals = m->codeAttr->maxLocals;
     f->stack = new uint32_t[m->codeAttr->maxStack]();
     f->locals = new uint32_t[m->codeAttr->maxLocals]();
+
+    /* Used to mark references and wide values (long, double) on stack
+     *
+    f->wide_operand = new uint64_t[(m->codeAttr->maxStack + 63) / 64]();
+    f->ref_operand = new uint64_t[(m->codeAttr->maxStack + 63) / 64]();
+    */
+
     f->code = m->code;
 
     return f;
@@ -210,6 +221,17 @@ void Interpreter::run()
     uint32_t *locals = top->locals;
     uint32_t *stack = top->stack;
     uint16_t stackTop = top->stackTop;
+
+    uint16_t refIndex, nameTypeIndex;
+    Class *frameClass = frameStack.top->owner->owner;
+    Class *fieldClass;
+    RefInfo *ref, *nameType;
+    std::string className, memberName, descriptor;
+    bool isRef, isWide;
+    uint16_t offset;
+    uint8_t *fieldPtr;
+
+    uint64_t wide_operand = 0, ref_operand = 0;
     while (true) {
         switch (code[pc]) {
         case opcodes::BIPUSH:
@@ -256,6 +278,52 @@ void Interpreter::run()
                     stack[stackTop - 2] * stack[stackTop - 1];
             stackTop--;
             pc++;
+            break;
+        case opcodes::PUTSTATIC:
+            refIndex = (code[pc + 1] << 8) | code[pc + 2];
+            ref = static_cast<RefInfo *>(frameClass->classFile->constantPool[refIndex - 1]);
+            className = frameClass->classFile->getIndexName(ref->firstIndex);
+            nameTypeIndex = ref->secondIndex;
+            nameType = static_cast<RefInfo *>(frameClass->classFile->constantPool[nameTypeIndex - 1]);
+            memberName = frameClass->classFile->getUtf8(nameType->firstIndex);
+            descriptor = frameClass->classFile->getUtf8(nameType->secondIndex);
+
+            fieldClass = ClassCache::getClass(className);
+
+            isRef = isWide = false;
+
+            offset = fieldClass->fieldOffset[memberName];
+            fieldPtr = &fieldClass->staticFields[offset];
+
+            switch (descriptor[0]) {
+                case 'B':
+                case 'Z':
+                    *fieldPtr = (int8_t) stack[--stackTop];
+                    break;
+                case 'C':
+                case 'S':
+                    *(int16_t *) fieldPtr = (int16_t) stack[--stackTop];
+                    break;
+                case 'F':
+                case 'I':
+                    *(int32_t *) fieldPtr = (int32_t) stack[--stackTop];
+                    break;
+                case 'D':
+                case 'J':
+                    *(int64_t *) fieldPtr = *(int64_t *) &stack[stackTop - 2];
+                    stackTop -= 2;
+                    break;
+                case 'L':
+                case '[':
+                    /* Fetch pointer with 32-bit index on stack
+                     * from sepcial frame-specific array
+                     */
+                    break;
+                deafult:
+                    break;
+            }
+
+            pc += 3;
             break;
         case opcodes::RETURN:
             frameStack.popFrame();

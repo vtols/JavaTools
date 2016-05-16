@@ -42,6 +42,7 @@ struct Class
     ClassFile *classFile;
 
     Class *super;
+    Method *classInit;
 
     uint16_t staticFieldsLength, fieldsLength;
     std::map<std::string, uint16_t> fieldOffset;
@@ -51,6 +52,7 @@ struct Class
 
     Class(ClassFile *classFile);
     static uint8_t fieldSize(std::string descriptor);
+    void init();
     Object *newObject();
     Method *getMethod(std::string name, std::string descriptor);
 };

@@ -42,6 +42,7 @@ namespace opcodes
         GOTO          = 0xA7,
         RETURN        = 0xB1,
         GETSTATIC     = 0xB2,
+        PUTSTATIC     = 0xB3,
         INVOKEVIRTUAL = 0xB6,
         IADD          = 0x60,
         IMUL          = 0x68;
