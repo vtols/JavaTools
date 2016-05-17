@@ -163,75 +163,79 @@ Method::Method(Class *owner, MemberInfo *info) :
     code = codeAttr->code;
 }
 
-void Thread::invoke(Method *m)
+Frame::Frame(Method *m) :
+    owner(m), pc(0), stackTop(0)
 {
-    Interpreter runInterpeter;
-    Frame *startFrame = runInterpeter.frameStack.newFrame(m);
-    runInterpeter.frameStack.pushFrame(startFrame);
-    runInterpeter.run();
-}
-
-void Stack::pushMethod(Method *m)
-{
-    Frame *startFrame = newFrame(m);
-    pushFrame(startFrame);
-}
-
-Frame *Stack::newFrame(Method *m)
-{
-    Frame *f = new Frame;
-    f->owner = m;
-    f->pc = 0;
-    f->stackTop = 0;
-    f->maxLocals = m->codeAttr->maxLocals;
-    f->stack = new uint32_t[m->codeAttr->maxStack]();
-    f->locals = new uint32_t[m->codeAttr->maxLocals]();
+    pc = stackTop = 0;
+    maxStack = m->codeAttr->maxStack;
+    maxLocals = m->codeAttr->maxLocals;
+    stack = new uint32_t[m->codeAttr->maxStack]();
+    locals = new uint32_t[m->codeAttr->maxLocals]();
+    code = m->code;
 
     /* Used to mark references and wide values (long, double) on stack
      *
     f->wide_operand = new uint64_t[(m->codeAttr->maxStack + 63) / 64]();
     f->ref_operand = new uint64_t[(m->codeAttr->maxStack + 63) / 64]();
     */
-
-    f->code = m->code;
-
-    return f;
 }
 
-void Stack::popFrame()
+Frame::~Frame()
 {
-    Frame *f = top->prev;
-    delete top->stack;
-    delete top->locals;
-    delete top;
-    top = f;
+    delete stack;
+    delete locals;
 }
 
-void Stack::pushFrame(Frame *f)
+void Thread::invoke(Method *m)
 {
-    f->prev = top;
-    top = f;
+    pushMethod(m);
+    runLoop();
 }
 
-void Interpreter::run()
+void Thread::pushMethod(Method *m)
 {
-    Frame *top = frameStack.top;
-    uint32_t pc = top->pc;
-    uint8_t *code = top->code;
-    uint32_t *locals = top->locals;
-    uint32_t *stack = top->stack;
-    uint16_t stackTop = top->stackTop;
+    Frame *startFrame = newFrame(m);
+    pushFrame(startFrame);
+}
 
-    uint16_t refIndex, nameTypeIndex;
-    Class *frameClass = frameStack.top->owner->owner;
-    Class *fieldClass;
-    RefInfo *ref, *nameType;
-    std::string className, memberName, descriptor;
-    bool isRef, isWide;
-    uint16_t offset;
-    uint8_t *fieldPtr;
+Frame *Thread::newFrame(Method *m)
+{
+    return new Frame(m);
+}
 
-    uint64_t wide_operand = 0, ref_operand = 0;
+void Thread::popFrame()
+{
+    Frame *f = frameStack.top();
+    delete f;
+    frameStack.pop();
+}
+
+void Thread::pushFrame(Frame *f)
+{
+    frameStack.push(f);
+}
+
+void Thread::loadFrame()
+{
+    top = frameStack.top();
+    pc = top->pc;
+    code = top->code;
+    locals = top->locals;
+    stack = top->stack;
+    stackTop = top->stackTop;
+
+    frameClass = top->owner->owner;
+}
+
+void Thread::saveFrame()
+{
+    top->pc = pc;
+    top->stackTop = stackTop;
+}
+
+void Thread::runLoop()
+{
+    loadFrame();
     while (true) {
         switch (code[pc]) {
         case opcodes::BIPUSH:
@@ -326,22 +330,27 @@ void Interpreter::run()
             pc += 3;
             break;
         case opcodes::RETURN:
-            frameStack.popFrame();
+            popFrame();
             return;
         default:
             break;
         }
-        frameStack.top->debug();
+        debugFrame();
     }
 }
 
-void Frame::debug()
+void Thread::debugFrame()
 {
+    if (frameStack.empty()) {
+        std::cout << "No frames" << std::endl;
+        return;
+    }
+
     std::cout << "Locals:\t\n[";
-    for (int i = 0; i < maxLocals; i++) {
+    for (int i = 0; i < frameStack.top()->maxLocals; i++) {
         if (i > 0)
             std::cout << ", ";
-        std::cout << locals[i];
+        std::cout << frameStack.top()->locals[i];
     }
     std::cout << "]\n";
 }

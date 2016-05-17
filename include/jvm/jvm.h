@@ -2,6 +2,7 @@
 #define JVM_H
 
 #include <map>
+#include <stack>
 
 #include <class/java_class.h>
 
@@ -93,34 +94,46 @@ struct Frame
     /* PC will be used later */
     uint32_t pc;
     uint32_t *stack, *locals;
-    uint16_t stackTop, maxLocals;
+    uint16_t stackTop, maxStack, maxLocals;
     uint8_t *code;
 
-    void debug();
-};
-
-struct Stack
-{
-    Frame *top = nullptr;
-
-    void pushMethod(Method *m);
-    void pushFrame(Frame *f);
-    void popFrame();
-    Frame *newFrame(Method *m);
-};
-
-class Interpreter
-{
-public:
-    Stack frameStack;
-
-    void run();
+    Frame(Method *m);
+    ~Frame();
 };
 
 class Thread
 {
 public:
     void invoke(Method *m);
+
+    void pushMethod(Method *m);
+    void pushFrame(Frame *f);
+    void popFrame();
+    Frame *newFrame(Method *m);
+
+    void runLoop();
+    void debugFrame();
+
+private:
+    std::stack<Frame *> frameStack;
+
+    void loadFrame();
+    void saveFrame();
+
+    Frame *top;
+    uint32_t pc;
+    uint8_t *code;
+    uint32_t *locals;
+    uint32_t *stack;
+    uint16_t stackTop;
+
+    uint16_t refIndex, nameTypeIndex;
+    Class *frameClass, *fieldClass;
+    RefInfo *ref, *nameType;
+    std::string className, memberName, descriptor;
+    bool isRef, isWide;
+    uint16_t offset;
+    uint8_t *fieldPtr;
 };
 
 #endif /* JVM_H */
