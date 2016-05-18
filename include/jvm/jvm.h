@@ -53,8 +53,9 @@ struct Class
 
     std::map<std::string, Method*> methods;
 
-    Class(ClassFile *classFile);
     static uint8_t fieldSize(std::string descriptor);
+
+    Class(ClassFile *classFile);
     Object *newObject();
     Method *getMethod(std::string name, std::string descriptor);
 };
@@ -84,6 +85,9 @@ struct Method
     CodeAttribute *codeAttr;
     uint32_t codeLength;
     uint8_t *code;
+
+    std::vector<std::string> argDescriptors;
+    std::string returnDescriptor;
 
     bool isInit = false;
 
@@ -124,7 +128,7 @@ private:
 
     std::stack<Method *> initStack;
 
-    Frame *top;
+    Frame *top, *prev;
     uint32_t pc;
     uint8_t *code;
     uint32_t *locals;
@@ -132,20 +136,25 @@ private:
     uint16_t stackTop;
 
     uint16_t refIndex, nameTypeIndex;
-    Class *frameClass, *fieldClass;
+    Class *frameClass, *memberClass;
     RefInfo *ref, *nameType;
     std::string className, memberName, descriptor;
     bool isRef, isWide;
     uint16_t offset;
     uint8_t *fieldPtr;
+    Method *resolvedMethod;
 
     void loadFrame();
     void saveFrame();
 
     void pushInit();
+    bool prepareClass();
+    void prepareMember();
     bool prepareField();
+    bool prepareMethod();
     void loadField();
     void storeField();
+    void loadArgs();
 };
 
 #endif /* JVM_H */

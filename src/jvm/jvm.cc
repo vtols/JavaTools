@@ -154,6 +154,24 @@ Method::Method(Class *owner, MemberInfo *info) :
         }
     }
 
+    size_t argIndex = 1;
+    std::string descriptor =
+            owner->classFile->getUtf8(info->descriptorIndex);
+    while (descriptor[argIndex] != ')')
+        if (descriptor[argIndex] == '[' ||
+                descriptor[argIndex] == 'L') {
+            size_t argEnd = descriptor.find(';', argIndex) + 1;
+            argDescriptors.push_back(descriptor.substr(argIndex, argEnd - argIndex));
+            argIndex = argEnd;
+        } else {
+            char argDescriptor = descriptor[argIndex++];
+            argDescriptors.push_back(std::string(1, argDescriptor));
+            if (argDescriptor == 'J' || argDescriptor == 'D') {
+                argDescriptors.push_back(argDescriptor + "+");
+            }
+        }
+    returnDescriptor = descriptor.substr(++argIndex, descriptor.length() - 1);
+
     codeLength = codeAttr->codeLength;
     code = codeAttr->code;
 }
@@ -228,16 +246,22 @@ void Thread::saveFrame()
 {
     top->pc = pc;
     top->stackTop = stackTop;
+    prev = top;
 }
 
 void Thread::prepareInit(Class *c)
 {
+    if (c->initStarted || c->initDone)
+        return;
     c->initStarted = true;
-    if (c->super != nullptr)
-        prepareInit(c->super);
 
     if (c->classInit != nullptr)
         initStack.push(c->classInit);
+    else
+        c->initDone = true;
+
+    if (c->super != nullptr)
+        prepareInit(c->super);
 }
 
 void Thread::pushInit()
@@ -312,9 +336,22 @@ void Thread::runLoop()
                 storeField();
             pc += 3;
             break;
+        case opcodes::INVOKESTATIC:
+            if (prepareMethod()) {
+                saveFrame();
+                pushInit();
+                loadFrame();
+                break;
+            }
+            pc += 3;
+            saveFrame();
+            pushMethod(resolvedMethod);
+            loadFrame();
+            loadArgs();
+            break;
         case opcodes::RETURN:
             if (top->owner->isInit)
-                top->owner->owner->initDone = true;
+                frameClass->initDone = true;
             popFrame();
             if (!initStack.empty())
                 pushInit();
@@ -323,37 +360,67 @@ void Thread::runLoop()
             loadFrame();
             break;
         default:
-            break;
+            std::cout << "Unimplemented instruction" << std::endl;
+            return;
         }
         debugFrame();
     }
 }
 
-bool Thread::prepareField()
+bool Thread::prepareClass()
 {
     refIndex = (code[pc + 1] << 8) | code[pc + 2];
     ref = static_cast<RefInfo *>(frameClass->classFile->constantPool[refIndex - 1]);
     className = frameClass->classFile->getIndexName(ref->firstIndex);
 
-    fieldClass = ClassCache::getClass(className);
+    memberClass = ClassCache::getClass(className);
 
-    if (!fieldClass->initStarted && !fieldClass->initDone) {
-        prepareInit(fieldClass);
+    if (!memberClass->initStarted && !memberClass->initDone) {
+        prepareInit(memberClass);
         return true;
     }
     /* In other case we must wait for initialization
      * only if initializing tread differs from current
      */
+    return false;
+}
 
+void Thread::prepareMember()
+{
     nameTypeIndex = ref->secondIndex;
     nameType = static_cast<RefInfo *>(frameClass->classFile->constantPool[nameTypeIndex - 1]);
     memberName = frameClass->classFile->getUtf8(nameType->firstIndex);
     descriptor = frameClass->classFile->getUtf8(nameType->secondIndex);
+}
+
+bool Thread::prepareField()
+{
+    if (prepareClass())
+        return true;
+
+    prepareMember();
 
     isRef = isWide = false;
 
-    offset = fieldClass->fieldOffset[memberName];
-    fieldPtr = &fieldClass->staticFields[offset];
+    offset = memberClass->fieldOffset[memberName];
+    fieldPtr = &memberClass->staticFields[offset];
+
+    return false;
+}
+
+bool Thread::prepareMethod()
+{
+    if (prepareClass())
+        return true;
+
+    prepareMember();
+
+    while (memberClass != nullptr) {
+        resolvedMethod = memberClass->getMethod(memberName, descriptor);
+        if (resolvedMethod != nullptr)
+            return false;
+        memberClass = memberClass->super;
+    }
 
     return false;
 }
@@ -416,6 +483,16 @@ void Thread::storeField()
         default:
             break;
     }
+}
+
+void Thread::loadArgs()
+{
+    /* Now without special case for references */
+    uint16_t argsLength = top->owner->argDescriptors.size();
+    uint16_t argsStart = prev->stackTop - argsLength;
+    for (uint16_t arg = 0; arg < argsLength; arg++)
+        top->locals[arg] = prev->stack[argsStart + arg];
+    prev->stackTop -= argsLength;
 }
 
 void Thread::debugFrame()
