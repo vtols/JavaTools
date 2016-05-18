@@ -87,8 +87,7 @@ std::string ClassFile::getIndexName(uint16_t index)
     ConstantPoolInfo *constInfo = constantPool[index - 1];
     uint8_t tag = constInfo->tag;
 
-    if (tag == CONSTANT_Methodref ||
-            tag == CONSTANT_Methodref ||
+    if (tag == CONSTANT_String ||
             tag == CONSTANT_Class) {
         IndexInfo *indexInfo = static_cast<IndexInfo *>(constInfo);
         return getUtf8(indexInfo->index);
