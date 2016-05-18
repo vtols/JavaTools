@@ -380,7 +380,7 @@ void Thread::storeField()
              * from sepcial frame-specific array
              */
             break;
-        deafult:
+        default:
             break;
     }
 }
