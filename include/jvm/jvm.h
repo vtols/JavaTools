@@ -44,6 +44,8 @@ struct Class
 
     Class *super;
     Method *classInit;
+    bool initDone = false, initStarted = false;
+    Thread *initThread = nullptr;
 
     uint16_t staticFieldsLength, fieldsLength;
     std::map<std::string, uint16_t> fieldOffset;
@@ -84,6 +86,8 @@ struct Method
     uint32_t codeLength;
     uint8_t *code;
 
+    bool isInit = false;
+
     Method(Class *owner, MemberInfo *info);
 };
 
@@ -111,14 +115,15 @@ public:
     void popFrame();
     Frame *newFrame(Method *m);
 
+    void prepareInit(Class *c);
+
     void runLoop();
     void debugFrame();
 
 private:
     std::stack<Frame *> frameStack;
 
-    void loadFrame();
-    void saveFrame();
+    std::stack<Method *> initStack;
 
     Frame *top;
     uint32_t pc;
@@ -134,6 +139,13 @@ private:
     bool isRef, isWide;
     uint16_t offset;
     uint8_t *fieldPtr;
+
+    void loadFrame();
+    void saveFrame();
+
+    void pushInit();
+    bool prepareField();
+    void storeField();
 };
 
 #endif /* JVM_H */

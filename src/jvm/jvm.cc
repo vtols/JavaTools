@@ -29,6 +29,8 @@ Class::Class(ClassFile *classFile) :
     if (superIndex != 0) {
         std::string superPath = classFile->getIndexName(superIndex);
         super = ClassCache::getClass(superPath);
+    } else {
+        super = nullptr;
     }
 
     uint16_t totalFieldsCount = classFile->fields.size();
@@ -65,8 +67,10 @@ Class::Class(ClassFile *classFile) :
 
         methods[combined] = method;
 
-        if (classInit == nullptr && combined == "<clinit>:()V")
+        if (classInit == nullptr && combined == "<clinit>:()V") {
+            method->isInit = true;
             classInit = method;
+        }
     }
 }
 
@@ -138,7 +142,6 @@ Class *ClassCache::getClass(std::string path)
 
     Class *loadedClass = ClassLoader::loadClass(path);
     classMap[path] = loadedClass;
-    loadedClass->init();
 
     return loadedClass;
 }
@@ -189,6 +192,8 @@ Frame::~Frame()
 void Thread::invoke(Method *m)
 {
     pushMethod(m);
+    if (!initStack.empty())
+        pushInit();
     runLoop();
 }
 
@@ -231,6 +236,24 @@ void Thread::saveFrame()
 {
     top->pc = pc;
     top->stackTop = stackTop;
+}
+
+void Thread::prepareInit(Class *c)
+{
+    c->initStarted = true;
+    if (c->super != nullptr)
+        prepareInit(c->super);
+
+    if (c->classInit != nullptr)
+        initStack.push(c->classInit);
+}
+
+void Thread::pushInit()
+{
+    Method *initMethod = initStack.top();
+    initStack.pop();
+
+    pushMethod(initMethod);
 }
 
 void Thread::runLoop()
@@ -284,58 +307,89 @@ void Thread::runLoop()
             pc++;
             break;
         case opcodes::PUTSTATIC:
-            refIndex = (code[pc + 1] << 8) | code[pc + 2];
-            ref = static_cast<RefInfo *>(frameClass->classFile->constantPool[refIndex - 1]);
-            className = frameClass->classFile->getIndexName(ref->firstIndex);
-            nameTypeIndex = ref->secondIndex;
-            nameType = static_cast<RefInfo *>(frameClass->classFile->constantPool[nameTypeIndex - 1]);
-            memberName = frameClass->classFile->getUtf8(nameType->firstIndex);
-            descriptor = frameClass->classFile->getUtf8(nameType->secondIndex);
-
-            fieldClass = ClassCache::getClass(className);
-
-            isRef = isWide = false;
-
-            offset = fieldClass->fieldOffset[memberName];
-            fieldPtr = &fieldClass->staticFields[offset];
-
-            switch (descriptor[0]) {
-                case 'B':
-                case 'Z':
-                    *fieldPtr = (int8_t) stack[--stackTop];
-                    break;
-                case 'C':
-                case 'S':
-                    *(int16_t *) fieldPtr = (int16_t) stack[--stackTop];
-                    break;
-                case 'F':
-                case 'I':
-                    *(int32_t *) fieldPtr = (int32_t) stack[--stackTop];
-                    break;
-                case 'D':
-                case 'J':
-                    *(int64_t *) fieldPtr = *(int64_t *) &stack[stackTop - 2];
-                    stackTop -= 2;
-                    break;
-                case 'L':
-                case '[':
-                    /* Fetch pointer with 32-bit index on stack
-                     * from sepcial frame-specific array
-                     */
-                    break;
-                deafult:
-                    break;
+            if (prepareField()) {
+                saveFrame();
+                pushInit();
+                loadFrame();
+                break;
             }
-
+            storeField();
             pc += 3;
             break;
         case opcodes::RETURN:
+            if (top->owner->isInit)
+                top->owner->owner->initDone = true;
             popFrame();
-            return;
+            if (!initStack.empty())
+                pushInit();
+            if (frameStack.empty())
+                return;
+            loadFrame();
+            break;
         default:
             break;
         }
         debugFrame();
+    }
+}
+
+bool Thread::prepareField()
+{
+    refIndex = (code[pc + 1] << 8) | code[pc + 2];
+    ref = static_cast<RefInfo *>(frameClass->classFile->constantPool[refIndex - 1]);
+    className = frameClass->classFile->getIndexName(ref->firstIndex);
+
+    fieldClass = ClassCache::getClass(className);
+
+    if (!fieldClass->initStarted) {
+        prepareInit(fieldClass);
+        return true;
+    }
+    /* In other case we must wait for initialization
+     * only if initializing tread differs from current
+     */
+
+    nameTypeIndex = ref->secondIndex;
+    nameType = static_cast<RefInfo *>(frameClass->classFile->constantPool[nameTypeIndex - 1]);
+    memberName = frameClass->classFile->getUtf8(nameType->firstIndex);
+    descriptor = frameClass->classFile->getUtf8(nameType->secondIndex);
+
+    isRef = isWide = false;
+
+    offset = fieldClass->fieldOffset[memberName];
+    fieldPtr = &fieldClass->staticFields[offset];
+
+    return false;
+}
+
+void Thread::storeField()
+{
+    switch (descriptor[0]) {
+        case 'B':
+        case 'Z':
+            *fieldPtr = (int8_t) stack[--stackTop];
+            break;
+        case 'C':
+        case 'S':
+            *(int16_t *) fieldPtr = (int16_t) stack[--stackTop];
+            break;
+        case 'F':
+        case 'I':
+            *(int32_t *) fieldPtr = (int32_t) stack[--stackTop];
+            break;
+        case 'D':
+        case 'J':
+            *(int64_t *) fieldPtr = *(int64_t *) &stack[stackTop - 2];
+            stackTop -= 2;
+            break;
+        case 'L':
+        case '[':
+            /* Fetch pointer with 32-bit index on stack
+             * from sepcial frame-specific array
+             */
+            break;
+        deafult:
+            break;
     }
 }
 

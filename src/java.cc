@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
             cls->getMethod("main", "([Ljava/lang/String;)V");
 
     Thread th;
+    th.prepareInit(cls);
     th.invoke(mainMethod);
 
     return 0;
