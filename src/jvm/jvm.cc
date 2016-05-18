@@ -74,14 +74,6 @@ Class::Class(ClassFile *classFile) :
     }
 }
 
-void Class::init()
-{
-    if (classInit != nullptr) {
-        Thread initThread;
-        initThread.invoke(classInit);
-    }
-}
-
 Object *Class::newObject()
 {
     return new Object(this);

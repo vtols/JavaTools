@@ -55,7 +55,6 @@ struct Class
 
     Class(ClassFile *classFile);
     static uint8_t fieldSize(std::string descriptor);
-    void init();
     Object *newObject();
     Method *getMethod(std::string name, std::string descriptor);
 };
