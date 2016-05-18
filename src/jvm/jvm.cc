@@ -33,6 +33,9 @@ Class::Class(ClassFile *classFile) :
         super = nullptr;
     }
 
+    if (super != nullptr)
+        fieldsLength = super->fieldsLength;
+
     uint16_t totalFieldsCount = classFile->fields.size();
     uint16_t staticFieldsCount = 0, fieldsCount = 0;
     for (size_t i = 0; i < totalFieldsCount; i++) {

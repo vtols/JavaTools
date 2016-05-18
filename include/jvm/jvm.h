@@ -47,7 +47,7 @@ struct Class
     bool initDone = false, initStarted = false;
     Thread *initThread = nullptr;
 
-    uint16_t staticFieldsLength, fieldsLength;
+    uint16_t staticFieldsLength = 0, fieldsLength = 0;
     std::map<std::string, uint16_t> fieldOffset;
     uint8_t *staticFields;
 
