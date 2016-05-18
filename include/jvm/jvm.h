@@ -144,6 +144,7 @@ private:
 
     void pushInit();
     bool prepareField();
+    void loadField();
     void storeField();
 };
 

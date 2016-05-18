@@ -298,6 +298,7 @@ void Thread::runLoop()
             stackTop--;
             pc++;
             break;
+        case opcodes::GETSTATIC:
         case opcodes::PUTSTATIC:
             if (prepareField()) {
                 saveFrame();
@@ -305,7 +306,10 @@ void Thread::runLoop()
                 loadFrame();
                 break;
             }
-            storeField();
+            if (code[pc] == opcodes::GETSTATIC)
+                loadField();
+            else
+                storeField();
             pc += 3;
             break;
         case opcodes::RETURN:
@@ -333,7 +337,7 @@ bool Thread::prepareField()
 
     fieldClass = ClassCache::getClass(className);
 
-    if (!fieldClass->initStarted) {
+    if (!fieldClass->initStarted && !fieldClass->initDone) {
         prepareInit(fieldClass);
         return true;
     }
@@ -352,6 +356,35 @@ bool Thread::prepareField()
     fieldPtr = &fieldClass->staticFields[offset];
 
     return false;
+}
+
+void Thread::loadField()
+{
+    switch (descriptor[0]) {
+        case 'B':
+        case 'Z':
+            stack[stackTop++] = *fieldPtr;
+            break;
+        case 'C':
+        case 'S':
+            stack[stackTop++] = *(int16_t *) fieldPtr;
+            break;
+        case 'F':
+        case 'I':
+            stack[stackTop++] = *(int32_t *) fieldPtr;
+            break;
+        case 'D':
+        case 'J':
+             *(int64_t *) &stack[stackTop] = *(int64_t *) fieldPtr;
+            stackTop += 2;
+            break;
+        case 'L':
+        case '[':
+            /* TODO */
+            break;
+        default:
+            break;
+    }
 }
 
 void Thread::storeField()
