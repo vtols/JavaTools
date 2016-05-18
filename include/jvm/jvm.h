@@ -104,6 +104,8 @@ struct Frame
     uint16_t stackTop, maxStack, maxLocals;
     uint8_t *code;
 
+    std::vector<Object *> objectIndex;
+
     Frame(Method *m);
     ~Frame();
 };
@@ -143,18 +145,21 @@ private:
     uint16_t offset;
     uint8_t *fieldPtr;
     Method *resolvedMethod;
+    Object *tmpObject;
 
     void loadFrame();
     void saveFrame();
 
     void pushInit();
-    bool prepareClass();
+    bool prepareClass(bool ofMember);
     void prepareMember();
     bool prepareField();
     bool prepareMethod();
     void loadField();
     void storeField();
     void loadArgs();
+
+    uint32_t referenceObject(Object *obj);
 };
 
 #endif /* JVM_H */

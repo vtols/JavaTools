@@ -45,6 +45,7 @@ namespace opcodes
         PUTSTATIC     = 0xB3,
         INVOKEVIRTUAL = 0xB6,
         INVOKESTATIC  = 0xB8,
+        NEW           = 0xBB,
         IADD          = 0x60,
         IMUL          = 0x68;
 }

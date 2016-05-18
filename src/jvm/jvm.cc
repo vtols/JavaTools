@@ -352,6 +352,17 @@ void Thread::runLoop()
             loadFrame();
             loadArgs();
             break;
+        case opcodes::NEW:
+            if (prepareClass(false)) {
+                saveFrame();
+                pushInit();
+                loadFrame();
+                break;
+            }
+            tmpObject = memberClass->newObject();
+            stack[stackTop++] = referenceObject(tmpObject);
+            pc += 3;
+            break;
         case opcodes::RETURN:
             if (top->owner->isInit)
                 frameClass->initDone = true;
@@ -370,17 +381,20 @@ void Thread::runLoop()
     }
 }
 
-bool Thread::prepareClass()
+bool Thread::prepareClass(bool ofMember=true)
 {
     refIndex = (code[pc + 1] << 8) | code[pc + 2];
-    ref = static_cast<RefInfo *>(frameClass->classFile->constantPool[refIndex - 1]);
-    className = frameClass->classFile->getIndexName(ref->firstIndex);
+    if (ofMember) {
+        ref = static_cast<RefInfo *>(frameClass->classFile->constantPool[refIndex - 1]);
+        refIndex = ref->firstIndex;
+    }
+    className = frameClass->classFile->getIndexName(refIndex);
 
     memberClass = ClassCache::getClass(className);
 
     if (!memberClass->initStarted && !memberClass->initDone) {
         prepareInit(memberClass);
-        return true;
+        return !initStack.empty();
     }
     /* In other case we must wait for initialization
      * only if initializing tread differs from current
@@ -496,6 +510,14 @@ void Thread::loadArgs()
     for (uint16_t arg = 0; arg < argsLength; arg++)
         top->locals[arg] = prev->stack[argsStart + arg];
     prev->stackTop -= argsLength;
+}
+
+uint32_t Thread::referenceObject(Object *obj)
+{
+    /* Object referencing should be more clever */
+    uint32_t objCount = top->objectIndex.size();
+    top->objectIndex.push_back(obj);
+    return objCount;
 }
 
 void Thread::debugFrame()
