@@ -344,6 +344,10 @@ void Thread::runLoop()
             stackTop++;
             pc++;
             break;
+        case opcodes::POP:
+            stackTop--;
+            pc++;
+            break;
         case opcodes::GETSTATIC:
         case opcodes::PUTSTATIC:
             if (prepareField()) {
