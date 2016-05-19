@@ -153,7 +153,8 @@ private:
     void pushInit();
     bool prepareClass(bool ofMember);
     void prepareMember();
-    bool prepareField();
+    bool prepareStaticField();
+    void prepareField();
     bool prepareMethod();
     void loadField();
     void storeField();

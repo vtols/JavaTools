@@ -348,9 +348,18 @@ void Thread::runLoop()
             stackTop--;
             pc++;
             break;
+        case opcodes::GETFIELD:
+        case opcodes::PUTFIELD:
+            prepareField();
+            if (code[pc] == opcodes::GETFIELD)
+                loadField();
+            else
+                storeField();
+            pc += 3;
+            break;
         case opcodes::GETSTATIC:
         case opcodes::PUTSTATIC:
-            if (prepareField()) {
+            if (prepareStaticField()) {
                 saveFrame();
                 pushInit();
                 loadFrame();
@@ -436,7 +445,7 @@ void Thread::prepareMember()
     descriptor = frameClass->classFile->getUtf8(nameType->secondIndex);
 }
 
-bool Thread::prepareField()
+bool Thread::prepareStaticField()
 {
     if (prepareClass())
         return true;
@@ -445,10 +454,35 @@ bool Thread::prepareField()
 
     isRef = isWide = false;
 
-    offset = memberClass->fieldOffset[memberName];
-    fieldPtr = &memberClass->staticFields[offset];
+    while (memberClass != nullptr) {
+        auto findIterator = memberClass->fieldOffset.find(memberName);
+        if (findIterator == memberClass->fieldOffset.end()) {
+            memberClass = memberClass->super;
+        } else {
+            offset = memberClass->fieldOffset[memberName];
+            fieldPtr = &memberClass->staticFields[offset];
+            break;
+        }
+    }
 
     return false;
+}
+
+void Thread::prepareField()
+{
+    prepareClass();
+    prepareMember();
+
+    while (memberClass != nullptr) {
+        auto findIterator = memberClass->fieldOffset.find(memberName);
+        if (findIterator == memberClass->fieldOffset.end()) {
+            memberClass = memberClass->super;
+        } else {
+            offset = memberClass->fieldOffset[memberName];
+            fieldPtr = &tmpObject->fields[offset];
+            break;
+        }
+    }
 }
 
 bool Thread::prepareMethod()
