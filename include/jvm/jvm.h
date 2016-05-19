@@ -157,7 +157,7 @@ private:
     bool prepareMethod();
     void loadField();
     void storeField();
-    void loadArgs();
+    void loadArgs(bool instanceMethod);
 
     uint32_t referenceObject(Object *obj);
 };

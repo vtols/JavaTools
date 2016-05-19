@@ -306,11 +306,25 @@ void Thread::runLoop()
             stack[stackTop++] =
                     locals[code[pc++] - opcodes::ILOAD_0];
             break;
+        case opcodes::ALOAD_0:
+        case opcodes::ALOAD_1:
+        case opcodes::ALOAD_2:
+        case opcodes::ALOAD_3:
+            stack[stackTop++] =
+                    locals[code[pc++] - opcodes::ALOAD_0];
+            break;
         case opcodes::ISTORE_0:
         case opcodes::ISTORE_1:
         case opcodes::ISTORE_2:
         case opcodes::ISTORE_3:
             locals[code[pc++] - opcodes::ISTORE_0] =
+                    stack[--stackTop];
+            break;
+        case opcodes::ASTORE_0:
+        case opcodes::ASTORE_1:
+        case opcodes::ASTORE_2:
+        case opcodes::ASTORE_3:
+            locals[code[pc++] - opcodes::ASTORE_0] =
                     stack[--stackTop];
             break;
         case opcodes::IADD:
@@ -345,6 +359,8 @@ void Thread::runLoop()
             pc += 3;
             break;
         case opcodes::INVOKESTATIC:
+        case opcodes::INVOKESPECIAL:
+            /* No valuable difference between them yet */
             if (prepareMethod()) {
                 saveFrame();
                 pushInit();
@@ -355,7 +371,7 @@ void Thread::runLoop()
             saveFrame();
             pushMethod(resolvedMethod);
             loadFrame();
-            loadArgs();
+            loadArgs(code[pc] == opcodes::INVOKESPECIAL);
             break;
         case opcodes::NEW:
             if (prepareClass(false)) {
@@ -469,7 +485,7 @@ void Thread::loadField()
             break;
         case 'L':
         case '[':
-            /* TODO */
+            stack[stackTop++] = referenceObject(*(Object **) fieldPtr);
             break;
         default:
             break;
@@ -498,23 +514,32 @@ void Thread::storeField()
             break;
         case 'L':
         case '[':
-            /* Fetch pointer with 32-bit index on stack
-             * from sepcial frame-specific array
-             */
+             *(Object **) fieldPtr = top->objectIndex[stack[--stackTop]];
             break;
         default:
             break;
     }
 }
 
-void Thread::loadArgs()
+void Thread::loadArgs(bool instanceMethod=false)
 {
     /* Now without special case for references */
     uint16_t argsLength = top->owner->argDescriptors.size();
     uint16_t argsStart = prev->stackTop - argsLength;
-    for (uint16_t arg = 0; arg < argsLength; arg++)
-        top->locals[arg] = prev->stack[argsStart + arg];
+    int32_t local = 0, arg = 0;
+    if (instanceMethod)
+        arg--, prev->stackTop--;
     prev->stackTop -= argsLength;
+    for (; arg < argsLength; arg++, local++) {
+        std::string argDescriptor = top->owner->argDescriptors[arg];
+        if (argDescriptor[0] == 'L' || argDescriptor[0] == '[') {
+            tmpObject = prev->objectIndex[prev->stack[argsStart + arg]];
+            top->locals[local] = referenceObject(tmpObject);
+        }
+        else {
+            top->locals[local] = prev->stack[argsStart + arg];
+        }
+    }
 }
 
 uint32_t Thread::referenceObject(Object *obj)

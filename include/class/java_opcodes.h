@@ -45,6 +45,7 @@ namespace opcodes
         GETSTATIC     = 0xB2,
         PUTSTATIC     = 0xB3,
         INVOKEVIRTUAL = 0xB6,
+        INVOKESPECIAL = 0xB7,
         INVOKESTATIC  = 0xB8,
         NEW           = 0xBB,
         IADD          = 0x60,
