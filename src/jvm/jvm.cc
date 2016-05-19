@@ -367,11 +367,12 @@ void Thread::runLoop()
                 loadFrame();
                 break;
             }
+            instanceMethod = code[pc] == opcodes::INVOKESPECIAL;
             pc += 3;
             saveFrame();
             pushMethod(resolvedMethod);
             loadFrame();
-            loadArgs(code[pc] == opcodes::INVOKESPECIAL);
+            loadArgs();
             break;
         case opcodes::NEW:
             if (prepareClass(false)) {
@@ -404,12 +405,12 @@ void Thread::runLoop()
 
 bool Thread::prepareClass(bool ofMember=true)
 {
-    refIndex = (code[pc + 1] << 8) | code[pc + 2];
+    uint16_t refIndex = (code[pc + 1] << 8) | code[pc + 2];
     if (ofMember) {
         ref = static_cast<RefInfo *>(frameClass->classFile->constantPool[refIndex - 1]);
         refIndex = ref->firstIndex;
     }
-    className = frameClass->classFile->getIndexName(refIndex);
+    std::string className = frameClass->classFile->getIndexName(refIndex);
 
     memberClass = ClassCache::getClass(className);
 
@@ -425,8 +426,8 @@ bool Thread::prepareClass(bool ofMember=true)
 
 void Thread::prepareMember()
 {
-    nameTypeIndex = ref->secondIndex;
-    nameType = static_cast<RefInfo *>(frameClass->classFile->constantPool[nameTypeIndex - 1]);
+    uint16_t nameTypeIndex = ref->secondIndex;
+    RefInfo *nameType = static_cast<RefInfo *>(frameClass->classFile->constantPool[nameTypeIndex - 1]);
     memberName = frameClass->classFile->getUtf8(nameType->firstIndex);
     descriptor = frameClass->classFile->getUtf8(nameType->secondIndex);
 }
@@ -521,7 +522,7 @@ void Thread::storeField()
     }
 }
 
-void Thread::loadArgs(bool instanceMethod=false)
+void Thread::loadArgs()
 {
     /* Now without special case for references */
     uint16_t argsLength = top->owner->argDescriptors.size();
@@ -530,9 +531,11 @@ void Thread::loadArgs(bool instanceMethod=false)
     if (instanceMethod)
         arg--, prev->stackTop--;
     prev->stackTop -= argsLength;
+    std::string argDescriptor;
     for (; arg < argsLength; arg++, local++) {
-        std::string argDescriptor = top->owner->argDescriptors[arg];
-        if (argDescriptor[0] == 'L' || argDescriptor[0] == '[') {
+        if (arg >= 0)
+            argDescriptor = top->owner->argDescriptors[arg];
+        if (arg < 0 || argDescriptor[0] == 'L' || argDescriptor[0] == '[') {
             tmpObject = prev->objectIndex[prev->stack[argsStart + arg]];
             top->locals[local] = referenceObject(tmpObject);
         }

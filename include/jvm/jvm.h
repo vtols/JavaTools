@@ -137,13 +137,13 @@ private:
     uint32_t *stack;
     uint16_t stackTop;
 
-    uint16_t refIndex, nameTypeIndex;
     Class *frameClass, *memberClass;
-    RefInfo *ref, *nameType;
-    std::string className, memberName, descriptor;
+    RefInfo *ref;
+    std::string memberName, descriptor;
     bool isRef, isWide;
     uint16_t offset;
     uint8_t *fieldPtr;
+    bool instanceMethod;
     Method *resolvedMethod;
     Object *tmpObject;
 
@@ -157,7 +157,7 @@ private:
     bool prepareMethod();
     void loadField();
     void storeField();
-    void loadArgs(bool instanceMethod);
+    void loadArgs();
 
     uint32_t referenceObject(Object *obj);
 };
