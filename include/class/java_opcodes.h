@@ -39,6 +39,7 @@ namespace opcodes
         ASTORE_2      = 0x4D,
         ASTORE_3      = 0x4E,
         POP           = 0x57,
+        DUP           = 0x59,
         GOTO          = 0xA7,
         RETURN        = 0xB1,
         GETSTATIC     = 0xB2,

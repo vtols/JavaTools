@@ -325,6 +325,11 @@ void Thread::runLoop()
             stackTop--;
             pc++;
             break;
+        case opcodes::DUP:
+            stack[stackTop] = stack[stackTop - 1];
+            stackTop++;
+            pc++;
+            break;
         case opcodes::GETSTATIC:
         case opcodes::PUTSTATIC:
             if (prepareField()) {
