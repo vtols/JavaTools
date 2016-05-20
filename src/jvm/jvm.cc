@@ -185,8 +185,8 @@ Frame::Frame(Method *m) :
     pc = stackTop = 0;
     maxStack = m->codeAttr->maxStack;
     maxLocals = m->codeAttr->maxLocals;
-    stack = new uint32_t[m->codeAttr->maxStack]();
-    locals = new uint32_t[m->codeAttr->maxLocals]();
+    stack = new intptr_t[m->codeAttr->maxStack]();
+    locals = new intptr_t[m->codeAttr->maxLocals]();
     code = m->code;
 
     /* Used to mark references and wide values (long, double) on stack
@@ -432,7 +432,7 @@ void Thread::runLoop()
                 break;
             }
             tmpObject = memberClass->newObject();
-            stack[stackTop++] = referenceObject(tmpObject);
+            stack[stackTop++] = (intptr_t) tmpObject;
             pc += 3;
             break;
         case opcodes::IRETURN:
@@ -582,7 +582,7 @@ void Thread::loadField()
             break;
         case 'L':
         case '[':
-            stack[stackTop++] = referenceObject(*(Object **) fieldPtr);
+            stack[stackTop++] = *(intptr_t *) fieldPtr;
             break;
         default:
             break;
@@ -611,7 +611,7 @@ void Thread::storeField()
             break;
         case 'L':
         case '[':
-             *(Object **) fieldPtr = top->objectIndex[stack[--stackTop]];
+             *(intptr_t *) fieldPtr = stack[--stackTop];
             break;
         default:
             break;
@@ -632,21 +632,13 @@ void Thread::loadArgs()
         if (arg >= 0)
             argDescriptor = top->owner->argDescriptors[arg];
         if (arg < 0 || argDescriptor[0] == 'L' || argDescriptor[0] == '[') {
-            tmpObject = prev->objectIndex[prev->stack[argsStart + arg]];
-            top->locals[local] = referenceObject(tmpObject);
+            tmpObject = (Object *) prev->stack[argsStart + arg];
+            top->locals[local] = (intptr_t) tmpObject;
         }
         else {
             top->locals[local] = prev->stack[argsStart + arg];
         }
     }
-}
-
-uint32_t Thread::referenceObject(Object *obj)
-{
-    /* Object referencing should be more clever */
-    uint32_t objCount = top->objectIndex.size();
-    top->objectIndex.push_back(obj);
-    return objCount;
 }
 
 void Thread::debugFrame()

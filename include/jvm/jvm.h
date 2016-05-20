@@ -100,11 +100,9 @@ struct Frame
     Method *owner;
     /* PC will be used later */
     uint32_t pc;
-    uint32_t *stack, *locals;
+    intptr_t *stack, *locals;
     uint16_t stackTop, maxStack, maxLocals;
     uint8_t *code;
-
-    std::vector<Object *> objectIndex;
 
     Frame(Method *m);
     ~Frame();
@@ -133,8 +131,7 @@ private:
     Frame *top, *prev;
     uint32_t pc;
     uint8_t *code;
-    uint32_t *locals;
-    uint32_t *stack;
+    intptr_t *locals, *stack;
     uint16_t stackTop;
 
     Class *frameClass, *memberClass;
@@ -161,8 +158,6 @@ private:
     void loadField();
     void storeField();
     void loadArgs();
-
-    uint32_t referenceObject(Object *obj);
 };
 
 #endif /* JVM_H */
