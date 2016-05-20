@@ -376,12 +376,16 @@ void Thread::runLoop()
             pc += (int16_t) ((code[pc + 1] << 8) | code[pc + 2]);
             break;
         case opcodes::GETFIELD:
-        case opcodes::PUTFIELD:
+            tmpObject = (Object *) stack[--stackTop];
             prepareField();
-            if (code[pc] == opcodes::GETFIELD)
-                loadField();
-            else
-                storeField();
+            loadField();
+            pc += 3;
+            break;
+        case opcodes::PUTFIELD:
+            tmpObject = (Object *) stack[stackTop - 2];
+            prepareField();
+            storeField();
+            stackTop--;
             pc += 3;
             break;
         case opcodes::GETSTATIC:
