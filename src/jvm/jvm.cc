@@ -339,6 +339,10 @@ void Thread::runLoop()
             stackTop--;
             pc++;
             break;
+        case opcodes::IINC:
+            locals[code[pc + 1]] += code[pc + 2];
+            pc += 3;
+            break;
         case opcodes::DUP:
             stack[stackTop] = stack[stackTop - 1];
             stackTop++;
