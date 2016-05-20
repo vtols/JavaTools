@@ -384,6 +384,15 @@ StackMapFrame *StackMapFrame::read(ByteReader *bs)
         frame->numberLocals = type - 251;
         for (int i = 0; i < frame->numberLocals; i++)
             frame->locals.push_back(VerificationTypeInfo::read(bs));
+    } else if (type == 255) {
+        /* full_frame */
+        frame->frameDelta = bs->read16();
+        frame->numberLocals = bs->read16();
+        for (int i = 0; i < frame->numberLocals; i++)
+            frame->locals.push_back(VerificationTypeInfo::read(bs));
+        frame->numberStack = bs->read16();
+        for (int i = 0; i < frame->numberStack; i++)
+            frame->stack.push_back(VerificationTypeInfo::read(bs));
     }
 
     return frame;
@@ -406,6 +415,15 @@ void StackMapFrame::write(ByteWriter *bs)
         bs->write(frameDelta);
         for (int i = 0; i < numberLocals; i++)
             locals[i].write(bs);
+    } else if (frameType == 255) {
+        /* append_frame */
+        bs->write(frameDelta);
+        bs->write(numberLocals);
+        for (int i = 0; i < numberLocals; i++)
+            locals[i].write(bs);
+        bs->write(numberStack);
+        for (int i = 0; i < numberStack; i++)
+            stack[i].write(bs);
     }
 }
 
