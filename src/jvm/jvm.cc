@@ -429,6 +429,12 @@ void Thread::runLoop()
             stack[stackTop++] = referenceObject(tmpObject);
             pc += 3;
             break;
+        case opcodes::IRETURN:
+            ret = stack[--stackTop];
+            popFrame();
+            loadFrame();
+            stack[stackTop++] = ret;
+            break;
         case opcodes::RETURN:
             if (top->owner->isInit)
                 frameClass->initDone = true;

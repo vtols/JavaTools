@@ -146,6 +146,7 @@ private:
     bool instanceMethod;
     Method *resolvedMethod;
     Object *tmpObject;
+    uint32_t ret;
 
     void loadFrame();
     void saveFrame();

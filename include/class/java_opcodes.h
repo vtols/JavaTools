@@ -44,6 +44,7 @@ namespace opcodes
         IF_ICMPGE     = 0xA2,
         IF_ICMPLE     = 0xA4,
         GOTO          = 0xA7,
+        IRETURN       = 0xAC,
         RETURN        = 0xB1,
         GETSTATIC     = 0xB2,
         PUTSTATIC     = 0xB3,
