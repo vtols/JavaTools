@@ -372,6 +372,9 @@ StackMapFrame *StackMapFrame::read(ByteReader *bs)
 
     if (0 <= type && type <= 63) {
         /* same_frame */
+    } else if (248 <= type && type <= 250) {
+        /* chop_frame */
+        frame->frameDelta = bs->read16();
     } else if (type == 251) {
         /* same_frame_extended */
         frame->frameDelta = bs->read16();
@@ -392,6 +395,9 @@ void StackMapFrame::write(ByteWriter *bs)
 
     if (0 <= frameType && frameType <= 63) {
         /* same_frame */
+    } else if (248 <= frameType && frameType <= 250) {
+        /* chop_frame */
+        bs->write(frameDelta);
     } else if (frameType == 251) {
         /* same_frame_extended */
         bs->write(frameDelta);
