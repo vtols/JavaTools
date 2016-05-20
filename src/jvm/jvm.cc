@@ -333,6 +333,12 @@ void Thread::runLoop()
             stackTop--;
             pc++;
             break;
+        case opcodes::ISUB:
+            stack[stackTop - 2] =
+                    stack[stackTop - 2] - stack[stackTop - 1];
+            stackTop--;
+            pc++;
+            break;
         case opcodes::IMUL:
             stack[stackTop - 2] =
                     stack[stackTop - 2] * stack[stackTop - 1];

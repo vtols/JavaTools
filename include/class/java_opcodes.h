@@ -40,6 +40,9 @@ namespace opcodes
         ASTORE_3      = 0x4E,
         POP           = 0x57,
         DUP           = 0x59,
+        IADD          = 0x60,
+        ISUB          = 0x64,
+        IMUL          = 0x68,
         IINC          = 0x84,
         IF_ICMPGE     = 0xA2,
         IF_ICMPLE     = 0xA4,
@@ -53,9 +56,7 @@ namespace opcodes
         INVOKEVIRTUAL = 0xB6,
         INVOKESPECIAL = 0xB7,
         INVOKESTATIC  = 0xB8,
-        NEW           = 0xBB,
-        IADD          = 0x60,
-        IMUL          = 0x68;
+        NEW           = 0xBB;
 }
 
 #endif /* JAVA_OPCODES_H */
