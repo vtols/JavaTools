@@ -156,6 +156,7 @@ private:
     bool prepareStaticField();
     void prepareField();
     bool prepareMethod();
+    void selectOverriding();
     void loadField();
     void storeField();
     void loadArgs();

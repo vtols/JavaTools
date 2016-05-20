@@ -387,6 +387,16 @@ void Thread::runLoop()
             loadFrame();
             loadArgs();
             break;
+        case opcodes::INVOKEVIRTUAL:
+            prepareMethod();
+            selectOverriding();
+            instanceMethod = true;
+            pc += 3;
+            saveFrame();
+            pushMethod(resolvedMethod);
+            loadFrame();
+            loadArgs();
+            break;
         case opcodes::NEW:
             if (prepareClass(false)) {
                 saveFrame();
@@ -500,6 +510,21 @@ bool Thread::prepareMethod()
     }
 
     return false;
+}
+
+void Thread::selectOverriding()
+{
+    Class *objClass = tmpObject->cls;
+    Method *overriding = nullptr;
+
+    while (objClass != memberClass) {
+        overriding = objClass->getMethod(memberName, descriptor);
+        if (overriding != nullptr) {
+            resolvedMethod = overriding;
+            return;
+        }
+        objClass = objClass->super;
+    }
 }
 
 void Thread::loadField()
