@@ -352,6 +352,9 @@ void Thread::runLoop()
             stackTop--;
             pc++;
             break;
+        case opcodes::GOTO:
+            pc += (int16_t) ((code[pc + 1] << 8) | code[pc + 2]);
+            break;
         case opcodes::GETFIELD:
         case opcodes::PUTFIELD:
             prepareField();
