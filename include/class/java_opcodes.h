@@ -41,6 +41,7 @@ namespace opcodes
         POP           = 0x57,
         DUP           = 0x59,
         IINC          = 0x84,
+        IF_ICMPGE     = 0xA2,
         GOTO          = 0xA7,
         RETURN        = 0xB1,
         GETSTATIC     = 0xB2,
