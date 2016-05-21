@@ -235,6 +235,8 @@ AttributeInfo *AttributeInfo::read(ByteReader *bs, ClassFile *cf)
         attr = StackMapTableAttribute::read(bs);
     else if (attrName == "SourceFile")
         attr = SourceFileAttribute::read(bs);
+    else if (attrName == "LocalVariableTable")
+        attr = LocalVariableTableAttribute::read(bs);
 
     attr->nameIndex = nameIndex;
     attr->length = length;
@@ -460,4 +462,45 @@ void VerificationTypeInfo::write(ByteWriter *bs)
     if (tag == ITEM_Object ||
             tag == ITEM_Uninitialized)
         bs->write(data);
+}
+
+Variable Variable::read(ByteReader *bs)
+{
+    Variable var;
+
+    var.startPc = bs->read16();
+    var.length = bs->read16();
+    var.nameIndex = bs->read16();
+    var.signatureIndex = bs->read16();
+    var.index = bs->read16();
+
+    return var;
+}
+
+void Variable::write(ByteWriter *bs)
+{
+    bs->write(startPc);
+    bs->write(length);
+    bs->write(nameIndex);
+    bs->write(signatureIndex);
+    bs->write(index);
+}
+
+LocalVariableTableAttribute *LocalVariableTableAttribute::read(ByteReader *bs)
+{
+    LocalVariableTableAttribute *attr = new LocalVariableTableAttribute;
+
+    attr->numberOfEntries = bs->read16();
+    for (int i = 0; i < attr->numberOfEntries; i++)
+        attr->entries.push_back(Variable::read(bs));
+    return attr;
+};
+
+void LocalVariableTableAttribute::write(ByteWriter *bs)
+{
+    AttributeInfo::write(bs);
+
+    bs->write(numberOfEntries);
+    for (int i = 0; i < numberOfEntries; i++)
+        entries[i].write(bs);
 }

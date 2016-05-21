@@ -256,4 +256,25 @@ struct SourceFileAttribute : AttributeInfo
     void write(ByteWriter *bs);
 };
 
+struct Variable
+{
+    uint16_t startPc;
+    uint16_t length;
+    uint16_t nameIndex;
+    uint16_t signatureIndex;
+    uint16_t index;
+
+    static Variable read(ByteReader *bs);
+    void write(ByteWriter *bs);
+};
+
+struct LocalVariableTableAttribute : AttributeInfo
+{
+    uint16_t numberOfEntries;
+    std::vector<Variable> entries;
+
+    static LocalVariableTableAttribute *read(ByteReader *bs);
+    void write(ByteWriter *bs);
+};
+
 #endif /* JAVA_CLASS_H */
