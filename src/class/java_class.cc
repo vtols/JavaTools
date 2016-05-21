@@ -374,6 +374,10 @@ StackMapFrame *StackMapFrame::read(ByteReader *bs)
 
     if (0 <= type && type <= 63) {
         /* same_frame */
+    } else if (64 <= type && type <= 127) {
+        /* same_locals_1_stack_item_frame */
+        frame->numberLocals = 1;
+        frame->locals.push_back(VerificationTypeInfo::read(bs));
     } else if (248 <= type && type <= 250) {
         /* chop_frame */
         frame->frameDelta = bs->read16();
@@ -406,6 +410,9 @@ void StackMapFrame::write(ByteWriter *bs)
 
     if (0 <= frameType && frameType <= 63) {
         /* same_frame */
+    } else if (64 <= frameType && frameType <= 127) {
+        /* same_locals_1_stack_item_frame */
+        locals[0].write(bs);
     } else if (248 <= frameType && frameType <= 250) {
         /* chop_frame */
         bs->write(frameDelta);
