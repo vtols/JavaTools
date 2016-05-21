@@ -544,6 +544,8 @@ void Thread::runLoop()
             break;
         case opcodes::INVOKEVIRTUAL:
             prepareMethod();
+            tmpObject =
+                    (Object *) stack[stackTop - resolvedMethod->argDescriptors.size() - 1];
             selectOverriding();
             instanceMethod = true;
             pc += 3;
