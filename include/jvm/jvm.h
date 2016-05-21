@@ -61,6 +61,8 @@ struct Class
 
     uint16_t staticFieldsLength = 0, fieldsLength = 0;
     std::map<std::string, uint16_t> fieldOffset;
+    std::map<std::string, std::string> descriptors;
+    std::vector<std::string> fieldNames, staticFieldNames;
     uint8_t *staticFields;
 
     std::map<std::string, Method*> methods;
@@ -155,8 +157,7 @@ public:
 
     void runLoop();
 
-    void debugCallStack();
-    void debugFrame(Frame *frame);
+
 
 private:
     std::stack<Method *> initStack;
@@ -195,6 +196,16 @@ private:
     template<typename T> T *arrayPointer(uint16_t stackOffset, int32_t index);
     void loadIntArray();
     void storeIntArray();
+};
+
+class Debug
+{
+public:
+    static void debugCallStack(Frame *top);
+    static void debugFrame(Frame *frame);
+    static void debugObject(Object *obj, int depth=1);
+    static void debugArrayObject(Object *array, int depth=1);
+    static void debugIntArray(int32_t *ptr, int32_t length);
 };
 
 #endif /* JVM_H */

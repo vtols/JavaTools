@@ -46,13 +46,16 @@ Class::Class(ClassFile *classFile) :
         MemberInfo *fieldInfo = classFile->fields[i];
         std::string fieldName = classFile->getUtf8(fieldInfo->nameIndex),
                 fieldDescriptor = classFile->getUtf8(fieldInfo->descriptorIndex);
+        descriptors[fieldName] = fieldDescriptor;
         if (fieldInfo->accessFlags & ACC_STATIC) {
             fieldOffset[fieldName] = staticFieldsLength;
             staticFieldsLength += fieldSize(fieldDescriptor);
+            staticFieldNames.push_back(fieldName);
             staticFieldsCount++;
         } else {
             fieldOffset[fieldName] = fieldsLength;
             fieldsLength += fieldSize(fieldDescriptor);
+            fieldNames.push_back(fieldName);
             fieldsCount++;
         }
     }
@@ -372,7 +375,8 @@ void Thread::runLoop()
 {
     loadFrame();
     while (true) {
-        debugCallStack();
+        saveFrame(); // save for debug
+        Debug::debugCallStack(top);
         switch (code[pc]) {
         case opcodes::BIPUSH:
             stack[stackTop++] = code[pc + 1];
@@ -810,9 +814,8 @@ void Thread::storeIntArray()
     stackTop -= 3;
 }
 
-void Thread::debugCallStack()
+void Debug::debugCallStack(Frame *top)
 {
-    saveFrame();
     int i = 0;
     for (Frame *f = top; f != nullptr; f = f->prev) {
         std::cout << '#' << i++ << std::endl;
@@ -821,7 +824,7 @@ void Thread::debugCallStack()
     std::cout << std::endl;
 }
 
-void Thread::debugFrame(Frame *frame)
+void Debug::debugFrame(Frame *frame)
 {
     MemberInfo *methodInfo = frame->owner->methodInfo;
     Class *frameClass = frame->owner->owner;
@@ -861,10 +864,93 @@ void Thread::debugFrame(Frame *frame)
         if (frame->pc >= local.startPc &&
                 frame->pc < local.startPc + local.length) {
             std::string localName = classFile->getUtf8(local.nameIndex);
+            std::string localSignature = classFile->getUtf8(local.signatureIndex);
+
             std::cout << "\t" << "local [" << local.index << "] "
-                      << localName << " = "
-                      << frame->locals[local.index]
-                      << std::endl;
+                      << localName << " = ";
+
+            if (localSignature[0] == 'L')
+                debugObject(reinterpret_cast<Object *>(frame->locals[local.index]), 2);
+            else
+                std::cout << frame->locals[local.index];
+            std::cout << std::endl;
         }
+    }
+}
+
+void Debug::debugObject(Object *obj, int depth)
+{
+    if (obj == nullptr) {
+        std::cout << "null";
+        return;
+    }
+
+    Class *objClass = obj->cls;
+
+    std::cout << "{";
+    if (depth <= 0) {
+        std::cout << "...";
+    } else {
+        int i = 0;
+        for (std::string& fieldName : objClass->fieldNames) {
+            uint16_t fieldOffset = objClass->fieldOffset[fieldName];
+            std::string descriptor = objClass->descriptors[fieldName];
+            uint8_t *field = &obj->fields[fieldOffset];
+            if (i > 0)
+                std::cout << ", ";
+            std::cout << fieldName << " = ";
+            switch (descriptor[0]) {
+                case 'I':
+                    std::cout << *reinterpret_cast<int32_t *>(field);
+                    break;
+                case 'L':
+                    debugObject(*reinterpret_cast<Object **>(field), depth - 1);
+                    break;
+                case '[':
+                    debugArrayObject(*reinterpret_cast<Object **>(field), depth - 1);
+                default:
+                    break;
+            }
+            i++;
+        }
+    }
+    std::cout << "}";
+}
+
+void Debug::debugArrayObject(Object *array, int depth)
+{
+    if (array == nullptr) {
+        std::cout << "null";
+        return;
+    }
+
+    ArrayClass *arrayClass = static_cast<ArrayClass*>(array->cls);
+
+    std::cout << "[";
+    if (depth <= 0) {
+        std::cout << "...";
+    } else {
+        int32_t length = *reinterpret_cast<int32_t *>(array->fields);
+        uint8_t *arrayBegin = array->fields + INTEGER_SIZE;
+        if (arrayClass->arrayOfPrimitives) {
+            switch (arrayClass->arrayBase.primitiveBase) {
+                case T_INT:
+                    debugIntArray(reinterpret_cast<int32_t *>(arrayBegin), length);
+                    break;
+                default:
+                    std::cout << "...";
+                    break;
+            }
+        }
+    }
+    std::cout << "]";
+}
+
+void Debug::debugIntArray(int32_t *ptr, int32_t length)
+{
+    for (int32_t i = 0; i < length; i++) {
+        if (i > 0)
+            std::cout << ", ";
+        std::cout << i << " = " << ptr[i];
     }
 }
