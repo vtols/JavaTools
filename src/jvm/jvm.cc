@@ -641,18 +641,8 @@ void Thread::loadArgs()
     if (instanceMethod)
         arg--, prev->stackTop--;
     prev->stackTop -= argsLength;
-    std::string argDescriptor;
-    for (; arg < argsLength; arg++, local++) {
-        if (arg >= 0)
-            argDescriptor = top->owner->argDescriptors[arg];
-        if (arg < 0 || argDescriptor[0] == 'L' || argDescriptor[0] == '[') {
-            tmpObject = (Object *) prev->stack[argsStart + arg];
-            top->locals[local] = (intptr_t) tmpObject;
-        }
-        else {
-            top->locals[local] = prev->stack[argsStart + arg];
-        }
-    }
+    for (; arg < argsLength; arg++, local++)
+        top->locals[local] = prev->stack[argsStart + arg];
 }
 
 void Thread::debugCallStack()
