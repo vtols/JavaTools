@@ -299,6 +299,11 @@ void Thread::runLoop()
             stack[stackTop++] =
                     code[pc++] - opcodes::ICONST_0;
             break;
+        case opcodes::ILOAD:
+        case opcodes::ALOAD:
+            stack[stackTop++] = locals[code[++pc]];
+            pc++;
+            break;
         case opcodes::ILOAD_0:
         case opcodes::ILOAD_1:
         case opcodes::ILOAD_2:
@@ -312,6 +317,11 @@ void Thread::runLoop()
         case opcodes::ALOAD_3:
             stack[stackTop++] =
                     locals[code[pc++] - opcodes::ALOAD_0];
+            break;
+        case opcodes::ISTORE:
+        case opcodes::ASTORE:
+            locals[code[++pc]] = stack[--stackTop];
+            pc++;
             break;
         case opcodes::ISTORE_0:
         case opcodes::ISTORE_1:
