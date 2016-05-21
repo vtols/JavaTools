@@ -41,7 +41,7 @@ const std::string opcodes::names[] = {
     ""        , ""        , ""        , ""        ,
     ""        , "ifeq"    , "ifne"    , ""        ,
     ""        , ""        , ""        , ""        ,
-    ""        , ""        , "if_icmpge", ""        ,
+    ""        , "if_icmplt", "if_icmpge", ""        ,
     "if_icmple", ""        , ""        , "goto"    ,
     ""        , ""        , ""        , ""        ,
     "ireturn" , ""        , ""        , ""        ,

@@ -489,6 +489,13 @@ void Thread::runLoop()
             else
                 pc += 3;
             break;
+        case opcodes::IF_ICMPLT:
+            if (stack[stackTop - 2] < stack[stackTop - 1])
+                pc += (int16_t) ((code[pc + 1] << 8) | code[pc + 2]);
+            else
+                pc += 3;
+            stackTop -= 2;
+            break;
         case opcodes::IF_ICMPGE:
             if (stack[stackTop - 2] >= stack[stackTop - 1])
                 pc += (int16_t) ((code[pc + 1] << 8) | code[pc + 2]);

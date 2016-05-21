@@ -51,6 +51,7 @@ public:
         IINC          = 0x84,
         IFNE          = 0x9A,
         IFEQ          = 0x99,
+        IF_ICMPLT     = 0xA1,
         IF_ICMPGE     = 0xA2,
         IF_ICMPLE     = 0xA4,
         GOTO          = 0xA7,
