@@ -23,7 +23,7 @@ const std::string opcodes::names[] = {
     "astore_1", "astore_2", "astore_3", "iastore" ,
     ""        , ""        , ""        , ""        ,
     ""        , ""        , ""        , "pop"     ,
-    ""        , "dup"     , ""        , ""        ,
+    ""        , "dup"     , "dup_x1"  , ""        ,
     ""        , ""        , ""        , ""        ,
     "iadd"    , ""        , ""        , ""        ,
     "isub"    , ""        , ""        , ""        ,

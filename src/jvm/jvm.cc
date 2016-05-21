@@ -466,6 +466,13 @@ void Thread::runLoop()
             stackTop++;
             pc++;
             break;
+        case opcodes::DUP_X1:
+            stack[stackTop] = stack[stackTop - 1];
+            stack[stackTop - 1] = stack[stackTop - 2];
+            stack[stackTop - 2] = stack[stackTop];
+            stackTop++;
+            pc++;
+            break;
         case opcodes::POP:
             stackTop--;
             pc++;

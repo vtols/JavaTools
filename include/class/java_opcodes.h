@@ -44,6 +44,7 @@ public:
         IASTORE       = 0x4F,
         POP           = 0x57,
         DUP           = 0x59,
+        DUP_X1        = 0x5A,
         IADD          = 0x60,
         ISUB          = 0x64,
         IMUL          = 0x68,
