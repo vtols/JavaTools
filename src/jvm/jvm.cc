@@ -22,6 +22,10 @@ Class *ClassLoader::loadClass(ByteReader *br)
     return ClassLoader::loadClass(cf);
 }
 
+Class::Class() {
+    super = ClassCache::getClass("java/lang/Object");
+}
+
 Class::Class(ClassFile *classFile) :
     classFile(classFile)
 {
@@ -56,8 +60,6 @@ Class::Class(ClassFile *classFile) :
     /* Zero-initialization of fields */
     staticFields = new uint8_t[staticFieldsLength]();
 
-    classInit = nullptr;
-
     for (MemberInfo* methodMember : classFile->methods) {
         uint16_t nameIndex = methodMember->nameIndex;
         uint16_t descriptorIndex = methodMember->descriptorIndex;
@@ -82,14 +84,82 @@ Object *Class::newObject()
     return Object::newObject(this);
 }
 
+ArrayClass::ArrayClass(Class *baseClass) :
+    arrayOfPrimitives(false)
+{
+    arrayBase.classBase = baseClass;
+}
+
+ArrayClass::ArrayClass(uint8_t basePrimitive) :
+    arrayOfPrimitives(true)
+{
+    arrayBase.primitiveBase = basePrimitive;
+}
+
+Object *ArrayClass::newArray(int32_t length)
+{
+    return Object::newArray(this, length);
+}
+
 Object *Object::newObject(Class *cls)
 {
-    uint8_t *objBuffer =
-            new uint8_t[sizeof(Object) + cls->fieldsLength - 1]();
+    return newObjectBlock(cls, sizeof(Object) + cls->fieldsLength - 1);
+}
+
+Object *Object::newArray(ArrayClass *cls, uint32_t length)
+{
+    uint8_t itemSize;
+
+    if (cls->arrayOfPrimitives) {
+        switch (cls->arrayBase.primitiveBase) {
+            case T_BOOLEAN:
+                itemSize = BOOLEAN_SIZE;
+                break;
+            case T_CHAR:
+                itemSize = CHAR_SIZE;
+                break;
+            case T_FLOAT:
+                itemSize = FLOAT_SIZE;
+                break;
+            case T_DOUBLE:
+                itemSize = DOUBLE_SIZE;
+                break;
+            case T_BYTE:
+                itemSize = BYTE_SIZE;
+                break;
+            case T_SHORT:
+                itemSize = SHORT_SIZE;
+                break;
+            case T_INT:
+                itemSize = INTEGER_SIZE;
+                break;
+            case T_LONG:
+                itemSize = LONG_SIZE;
+                break;
+        }
+    } else
+        itemSize = OBJECT_SIZE;
+
+    // {int a.length, a[0], a[1], ..., a[a.length - 1]}
+    uint32_t totalLength = itemSize * length + INTEGER_SIZE;
+
+    Object *array  = newObjectBlock(cls, sizeof(Object) + totalLength - 1);
+    *reinterpret_cast<int32_t *>(array->fields) = length;
+
+    return array;
+}
+
+Object *Object::newObjectBlock(Class *cls, uint32_t size)
+{
+    uint8_t *objBuffer = new uint8_t[size]();
     Object *obj = reinterpret_cast<Object *>(objBuffer);
     obj->cls = cls;
     return obj;
 }
+
+static std::string primitiveArrays[] =
+    {"",   "",   "",   "",   "[Z", "[C",
+     "[F", "[D", "[B", "[S", "[I", "[L"};
 
 uint8_t Class::fieldSize(std::string descriptor)
 {
@@ -107,13 +177,12 @@ uint8_t Class::fieldSize(std::string descriptor)
         case 'J':
             return LONG_SIZE;
         case 'L':
+        case '[':
             return OBJECT_SIZE;
         case 'S':
             return SHORT_SIZE;
         case 'Z':
             return BOOLEAN_SIZE;
-        case '[':
-            return ARRAY_SIZE;
         default:
             return 0;
     }
@@ -138,7 +207,28 @@ Class *ClassCache::getClass(std::string path)
     if (findIterator != classMap.end())
         return (*findIterator).second;
 
-    Class *loadedClass = ClassLoader::loadClass(path);
+    Class *loadedClass;
+
+    if (path[0] == '[') {
+        std::string className;
+        if (path[1] == 'L') {
+            className = path.substr(2, path.length() - 3);
+            loadedClass = new ArrayClass(getClass(className));
+        } else if (path[1] == '['){
+            className = path.substr(1, path.length() - 1);
+            loadedClass = new ArrayClass(getClass(className));
+        } else {
+            for (uint8_t i = 0; i < T_MAX; i++) {
+                if (primitiveArrays[i] == path) {
+                    loadedClass = new ArrayClass(i);
+                    break;
+                }
+            }
+        }
+    } else {
+        loadedClass = ClassLoader::loadClass(path);
+    }
+
     classMap[path] = loadedClass;
 
     return loadedClass;
@@ -340,6 +430,14 @@ void Thread::runLoop()
             locals[code[pc++] - opcodes::ASTORE_0] =
                     stack[--stackTop];
             break;
+        case opcodes::IALOAD:
+            loadIntArray();
+            pc++;
+            break;
+        case opcodes::IASTORE:
+            storeIntArray();
+            pc++;
+            break;
         case opcodes::IADD:
             stack[stackTop - 2] =
                     stack[stackTop - 2] + stack[stackTop - 1];
@@ -463,6 +561,10 @@ void Thread::runLoop()
             tmpObject = memberClass->newObject();
             stack[stackTop++] = (intptr_t) tmpObject;
             pc += 3;
+            break;
+        case opcodes::NEWARRAY:
+            newArray(code[pc + 1]);
+            pc += 2;
             break;
         case opcodes::IRETURN:
             ret = stack[--stackTop];
@@ -658,6 +760,38 @@ void Thread::loadArgs()
     prev->stackTop -= argsLength;
     for (; arg < argsLength; arg++, local++)
         top->locals[local] = prev->stack[argsStart + arg];
+}
+
+void Thread::newArray(uint8_t type)
+{
+    std::string typeStr = primitiveArrays[code[pc + 1]];
+    Class *c = ClassCache::getClass(typeStr);
+    ArrayClass *arrayClass = static_cast<ArrayClass *>(c);
+    Object *array = arrayClass->newArray((int32_t) stack[--stackTop]);
+    stack[stackTop++] = reinterpret_cast<intptr_t>(array);
+}
+
+template<typename T>
+T *Thread::arrayPointer(uint16_t stackOffset, int32_t index)
+{
+    tmpObject = reinterpret_cast<Object *>(stack[stackTop - stackOffset]);
+
+    // Skip length (int size)
+    return &reinterpret_cast<T *>(&tmpObject->fields[INTEGER_SIZE])[index];
+}
+
+void Thread::loadIntArray()
+{
+    stack[stackTop - 2] =
+            static_cast<intptr_t>(*arrayPointer<int32_t>(2, stack[stackTop - 1]));
+    stackTop--;
+}
+
+void Thread::storeIntArray()
+{
+    *(arrayPointer<int32_t>(3, stack[stackTop - 2])) =
+            static_cast<int32_t>(stack[stackTop - 1]);
+    stackTop -= 3;
 }
 
 void Thread::debugCallStack()

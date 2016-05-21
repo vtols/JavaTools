@@ -28,6 +28,7 @@ namespace opcodes
         ALOAD_1       = 0x2B,
         ALOAD_2       = 0x2C,
         ALOAD_3       = 0x2D,
+        IALOAD        = 0x2E,
         ISTORE        = 0x36,
         ASTORE        = 0x3A,
         ISTORE_0      = 0x3B,
@@ -38,6 +39,7 @@ namespace opcodes
         ASTORE_1      = 0x4C,
         ASTORE_2      = 0x4D,
         ASTORE_3      = 0x4E,
+        IASTORE       = 0x4F,
         POP           = 0x57,
         DUP           = 0x59,
         IADD          = 0x60,
@@ -58,7 +60,8 @@ namespace opcodes
         INVOKEVIRTUAL = 0xB6,
         INVOKESPECIAL = 0xB7,
         INVOKESTATIC  = 0xB8,
-        NEW           = 0xBB;
+        NEW           = 0xBB,
+        NEWARRAY      = 0xBC;
 }
 
 #endif /* JAVA_OPCODES_H */

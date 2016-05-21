@@ -15,6 +15,18 @@ struct Frame;
 class Interpreter;
 class Thread;
 
+
+const int
+    T_BOOLEAN = 4,
+    T_CHAR    = 5,
+    T_FLOAT   = 6,
+    T_DOUBLE  = 7,
+    T_BYTE    = 8,
+    T_SHORT   = 9,
+    T_INT     = 10,
+    T_LONG    = 11,
+    T_MAX     = 12;
+
 const int
     BYTE_SIZE    = 1,
     CHAR_SIZE    = 2,
@@ -24,8 +36,7 @@ const int
     LONG_SIZE    = 8,
     OBJECT_SIZE  = sizeof(uintptr_t),
     SHORT_SIZE   = 2,
-    BOOLEAN_SIZE = 1,
-    ARRAY_SIZE   = sizeof(uintptr_t);
+    BOOLEAN_SIZE = 1;
 
 class ClassLoader
 {
@@ -43,7 +54,8 @@ struct Class
     ClassFile *classFile;
 
     Class *super;
-    Method *classInit;
+
+    Method *classInit = nullptr;
     bool initDone = false, initStarted = false;
     Thread *initThread = nullptr;
 
@@ -58,6 +70,23 @@ struct Class
     Class(ClassFile *classFile);
     Object *newObject();
     Method *getMethod(std::string name, std::string descriptor);
+
+protected:
+    Class();
+};
+
+struct ArrayClass : Class
+{
+    bool arrayOfPrimitives;
+    union {
+        Class *classBase;
+        uint8_t primitiveBase;
+    } arrayBase;
+
+    ArrayClass(Class *baseClass);
+    ArrayClass(uint8_t basePrimitive);
+
+    Object *newArray(int32_t length); // Array creation
 };
 
 class ClassCache
@@ -76,6 +105,10 @@ struct Object
     uint8_t fields[1];
 
     static Object *newObject(Class *cls);
+    static Object *newArray(ArrayClass *cls, uint32_t length);
+
+private:
+    static Object *newObjectBlock(Class *cls, uint32_t size);
 };
 
 struct Method
@@ -158,6 +191,10 @@ private:
     void loadField();
     void storeField();
     void loadArgs();
+    void newArray(uint8_t type);
+    template<typename T> T *arrayPointer(uint16_t stackOffset, int32_t index);
+    void loadIntArray();
+    void storeIntArray();
 };
 
 #endif /* JVM_H */
