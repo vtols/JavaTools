@@ -223,19 +223,19 @@ Frame *Thread::newFrame(Method *m)
 
 void Thread::popFrame()
 {
-    Frame *f = frameStack.top();
-    delete f;
-    frameStack.pop();
+    Frame *f = top->prev;
+    delete top;
+    top = f;
 }
 
 void Thread::pushFrame(Frame *f)
 {
-    frameStack.push(f);
+    f->prev = top;
+    top = f;
 }
 
 void Thread::loadFrame()
 {
-    top = frameStack.top();
     pc = top->pc;
     code = top->code;
     locals = top->locals;
@@ -461,7 +461,7 @@ void Thread::runLoop()
             popFrame();
             if (!initStack.empty())
                 pushInit();
-            if (frameStack.empty())
+            if (top == nullptr)
                 return;
             loadFrame();
             break;
@@ -469,7 +469,7 @@ void Thread::runLoop()
             std::cout << "Unimplemented instruction" << std::endl;
             return;
         }
-        debugFrame();
+        debugCallStack();
     }
 }
 
@@ -655,18 +655,49 @@ void Thread::loadArgs()
     }
 }
 
-void Thread::debugFrame()
+void Thread::debugCallStack()
 {
-    if (frameStack.empty()) {
-        std::cout << "No frames" << std::endl;
-        return;
+    saveFrame();
+    int i = 0;
+    for (Frame *f = top; f != nullptr; f = f->prev) {
+        std::cout << '#' << i++ << std::endl;
+        debugFrame(f);
+    }
+    std::cout << std::endl;
+}
+
+void Thread::debugFrame(Frame *frame)
+{
+    MemberInfo *methodInfo = frame->owner->methodInfo;
+    Class *frameClass = frame->owner->owner;
+    ClassFile *classFile = frameClass->classFile;
+    CodeAttribute *codeAttr = static_cast<CodeAttribute *>(methodInfo->attributes[0]);
+    LocalVariableTableAttribute *localsAttr = nullptr;
+    for (size_t i = 0; i < codeAttr->attributes.size(); i++) {
+        AttributeInfo *attr = codeAttr->attributes[i];
+        std::string attrName = classFile->getUtf8(attr->nameIndex);
+        if (attrName == "LocalVariableTable") {
+            localsAttr = static_cast<LocalVariableTableAttribute *>(attr);
+            break;
+        }
     }
 
-    std::cout << "Locals:\t\n[";
-    for (int i = 0; i < frameStack.top()->maxLocals; i++) {
-        if (i > 0)
-            std::cout << ", ";
-        std::cout << frameStack.top()->locals[i];
+    std::cout << classFile->getIndexName(classFile->thisClass) << "::"
+              << classFile->getUtf8(methodInfo->nameIndex) << ":"
+              << classFile->getUtf8(methodInfo->descriptorIndex)
+              << std::endl;
+
+    if (localsAttr == nullptr)
+        return;
+
+    for (uint16_t i = 0; i < localsAttr->numberOfEntries; i++) {
+        Variable local = localsAttr->entries[i];
+        if (frame->pc >= local.startPc &&
+                frame->pc < local.startPc + local.length) {
+            std::string localName = classFile->getUtf8(local.nameIndex);
+            std::cout << "\t" << localName << " = "
+                      << frame->locals[local.index]
+                      << std::endl;
+        }
     }
-    std::cout << "]\n";
 }

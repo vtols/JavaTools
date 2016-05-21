@@ -121,14 +121,14 @@ public:
     void prepareInit(Class *c);
 
     void runLoop();
-    void debugFrame();
+
+    void debugCallStack();
+    void debugFrame(Frame *frame);
 
 private:
-    std::stack<Frame *> frameStack;
-
     std::stack<Method *> initStack;
 
-    Frame *top, *prev;
+    Frame *top = nullptr, *prev;
     uint32_t pc;
     uint8_t *code;
     intptr_t *locals, *stack;
