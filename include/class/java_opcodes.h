@@ -2,10 +2,12 @@
 #define JAVA_OPCODES_H
 
 #include <cstdint>
+#include <string>
 
-namespace opcodes
+class opcodes
 {
-    const uint8_t
+public:
+    static const uint8_t
         ICONST_M1     = 0x02,
         ICONST_0      = 0x03,
         ICONST_1      = 0x04,
@@ -62,7 +64,9 @@ namespace opcodes
         INVOKESTATIC  = 0xB8,
         NEW           = 0xBB,
         NEWARRAY      = 0xBC;
-}
+
+    static const std::string names[];
+};
 
 #endif /* JAVA_OPCODES_H */
 

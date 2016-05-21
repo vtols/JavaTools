@@ -372,6 +372,7 @@ void Thread::runLoop()
 {
     loadFrame();
     while (true) {
+        debugCallStack();
         switch (code[pc]) {
         case opcodes::BIPUSH:
             stack[stackTop++] = code[pc + 1];
@@ -586,7 +587,6 @@ void Thread::runLoop()
             std::cout << "Unimplemented instruction" << std::endl;
             return;
         }
-        debugCallStack();
     }
 }
 
@@ -826,6 +826,17 @@ void Thread::debugFrame(Frame *frame)
               << classFile->getUtf8(methodInfo->descriptorIndex)
               << std::endl;
 
+    std::cout << frame->pc << ":\t"
+              << opcodes::names[frame->code[frame->pc]]
+              << std::endl;
+
+    for (uint16_t i = 0; i < frame->stackTop; i++) {
+        std::cout << "\t" << "stack [" << i << "]"
+                  << " = "
+                  << frame->stack[i]
+                  << std::endl;
+    }
+
     if (localsAttr == nullptr)
         return;
 
@@ -834,7 +845,8 @@ void Thread::debugFrame(Frame *frame)
         if (frame->pc >= local.startPc &&
                 frame->pc < local.startPc + local.length) {
             std::string localName = classFile->getUtf8(local.nameIndex);
-            std::cout << "\t" << localName << " = "
+            std::cout << "\t" << "local [" << local.index << "] "
+                      << localName << " = "
                       << frame->locals[local.index]
                       << std::endl;
         }

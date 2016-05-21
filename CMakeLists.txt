@@ -39,6 +39,7 @@ set(SOURCES_javatools
     ${SOURCE_PATH}/parser/java_parser.cc
     ${SOURCE_PATH}/class/java_class_builder.cc
     ${SOURCE_PATH}/class/java_class.cc
+    ${SOURCE_PATH}/class/java_opcodes.cc
 )
 ADD_LIBRARY(${LIB_javatools} STATIC ${SOURCES_javatools} )
 
