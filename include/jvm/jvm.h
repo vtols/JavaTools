@@ -73,9 +73,9 @@ private:
 struct Object
 {
     Class *cls;
-    uint8_t *fields;
+    uint8_t fields[1];
 
-    Object(Class *cls);
+    static Object *newObject(Class *cls);
 };
 
 struct Method

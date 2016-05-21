@@ -79,13 +79,16 @@ Class::Class(ClassFile *classFile) :
 
 Object *Class::newObject()
 {
-    return new Object(this);
+    return Object::newObject(this);
 }
 
-Object::Object(Class *cls) :
-    cls(cls)
+Object *Object::newObject(Class *cls)
 {
-    fields = new uint8_t[cls->fieldsLength]();
+    uint8_t *objBuffer =
+            new uint8_t[sizeof(Object) + cls->fieldsLength - 1]();
+    Object *obj = reinterpret_cast<Object *>(objBuffer);
+    obj->cls = cls;
+    return obj;
 }
 
 uint8_t Class::fieldSize(std::string descriptor)
