@@ -596,6 +596,7 @@ void Thread::runLoop()
             pc += 2;
             break;
         case opcodes::IRETURN:
+        case opcodes::ARETURN:
             ret = stack[--stackTop];
             popFrame();
             loadFrame();

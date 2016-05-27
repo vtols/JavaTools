@@ -45,7 +45,7 @@ const std::string opcodes::names[] = {
     "if_icmple", ""        , ""        , "goto"    ,
     ""        , ""        , ""        , ""        ,
     "ireturn" , ""        , ""        , ""        ,
-    ""        , "return"  , "getstatic", "putstatic",
+    "areturn" , "return"  , "getstatic", "putstatic",
     "getfield", "putfield", "invokevirtual", "invokespecial",
     "invokestatic", ""        , ""        , "new"     ,
     "newarray", ""        , ""        , ""        ,

@@ -58,6 +58,7 @@ public:
         IF_ICMPLE     = 0xA4,
         GOTO          = 0xA7,
         IRETURN       = 0xAC,
+        ARETURN       = 0xB0,
         RETURN        = 0xB1,
         GETSTATIC     = 0xB2,
         PUTSTATIC     = 0xB3,
