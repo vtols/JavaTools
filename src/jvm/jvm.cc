@@ -443,6 +443,14 @@ void Thread::runLoop()
             storeIntArray();
             pc++;
             break;
+        case opcodes::BALOAD:
+            loadBoolArray();
+            pc++;
+            break;
+        case opcodes::BASTORE:
+            storeBoolArray();
+            pc++;
+            break;
         case opcodes::IADD:
             stack[stackTop - 2] =
                     stack[stackTop - 2] + stack[stackTop - 1];
@@ -814,6 +822,20 @@ void Thread::storeIntArray()
     stackTop -= 3;
 }
 
+void Thread::loadBoolArray()
+{
+    stack[stackTop - 2] =
+            static_cast<intptr_t>(*arrayPointer<int8_t>(2, stack[stackTop - 1]));
+    stackTop--;
+}
+
+void Thread::storeBoolArray()
+{
+    *(arrayPointer<int8_t>(3, stack[stackTop - 2])) =
+            static_cast<int8_t>(stack[stackTop - 1]);
+    stackTop -= 3;
+}
+
 void Debug::debugCallStack(Frame *top)
 {
     int i = 0;
@@ -871,6 +893,8 @@ void Debug::debugFrame(Frame *frame)
 
             if (localSignature[0] == 'L')
                 debugObject(reinterpret_cast<Object *>(frame->locals[local.index]), 2);
+            if (localSignature[0] == '[')
+                debugArrayObject(reinterpret_cast<Object *>(frame->locals[local.index]), 2);
             else
                 std::cout << frame->locals[local.index];
             std::cout << std::endl;
@@ -937,6 +961,9 @@ void Debug::debugArrayObject(Object *array, int depth)
                 case T_INT:
                     debugIntArray(reinterpret_cast<int32_t *>(arrayBegin), length);
                     break;
+                case T_BOOLEAN:
+                    debugBoolArray(reinterpret_cast<int8_t *>(arrayBegin), length);
+                    break;
                 default:
                     std::cout << "...";
                     break;
@@ -952,5 +979,18 @@ void Debug::debugIntArray(int32_t *ptr, int32_t length)
         if (i > 0)
             std::cout << ", ";
         std::cout << i << " = " << ptr[i];
+    }
+}
+
+void Debug::debugBoolArray(int8_t *ptr, int32_t length)
+{
+    for (int32_t i = 0; i < length; i++) {
+        if (i > 0)
+            std::cout << ", ";
+        std::cout << i << " = ";
+        if (ptr[i])
+            std::cout << "true";
+        else
+            std::cout << "false";
     }
 }

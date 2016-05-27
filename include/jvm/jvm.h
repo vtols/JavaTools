@@ -196,6 +196,8 @@ private:
     template<typename T> T *arrayPointer(uint16_t stackOffset, int32_t index);
     void loadIntArray();
     void storeIntArray();
+    void loadBoolArray();
+    void storeBoolArray();
 };
 
 class Debug
@@ -206,6 +208,7 @@ public:
     static void debugObject(Object *obj, int depth=1);
     static void debugArrayObject(Object *array, int depth=1);
     static void debugIntArray(int32_t *ptr, int32_t length);
+    static void debugBoolArray(int8_t *ptr, int32_t length);
 };
 
 #endif /* JVM_H */
